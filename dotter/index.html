@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hello!</title>
+    
+    <style>
+    
+    /* CSS files add styling rules to your content */
+    *{
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Old versions of Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+      color: white;
+      font-family:  SFMono-Regular, "SFMono-Regular", SFMono, Menlo,
+        Monaco, Consolas,"Liberation Mono","Courier New", monospace;
+    }
+    
+    body {
+      font-family: helvetica, arial, sans-serif;
+      height: 100vh;
+      margin: 0;
+      font-size: 12px;
+      background-color: #000;
+    }
+    .tools{
+      display: flex;
+      height: 10%;
+    }
+    .board-container{
+      display: flex;
+      justify-content:space-around;
+      align-content: center;
+    }
+    .board{
+      display: grid;
+      grid-gap: 3px 3px;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    }
+    .dot{
+      height: 20px;
+      width: 20px;
+      background-color: #19181A;
+    }  
+    input[type=color]{
+      border: none;
+      background-color: transparent;
+    }
+    button{
+      background-color: black;
+      border-width: 1px;
+    }
+    #undo-button{
+      opacity: .5;
+      transition: opacity .1s ease-in-out;
+    }
+    #redo-button{
+      opacity: .5;
+      transition: opacity .1s ease-in-out;
+    }
+    #undo-history{
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+      margin-top: 20px;
+      border: 1px solid rgba(255,255,255,.8);
+      padding: 10px;
+      max-width: 100%;
+      overflow-x: scroll;
+    }
+    #undo-history .board{
+      grid-gap: 0 0 ;
+      margin-right: 10px;
+
+    }
+    #undo-history .dot{
+      width: 2px;
+      height: 2px;
+    }
+    </style>
+  </head>  
+  <body>
+    <div class="tools">
+      <div id="color-select">
+        <input type="color" id="color-selected" name="select-color"
+           value="#e66465">
+      </div>
+      <div class="undo">
+        <button id="undo-button" disabled>undo</button>
+      </div>
+      <div class="redo">
+        <button id="redo-button" disabled>redo</button>
+      </div>
+    </div>
+    <div id="grid-container" class="board-container">
+    </div>
+    
+    <script>
+      
+      var gridContainer,
+        colorWell = document.getElementById("color-selected"),
+        defaultColor = "#000ff0",
+        undoStack = [],
+        grid,
+        undoPresses = 0,
+        undoCount = 0,
+        undoButton = document.getElementById("undo-button"),
+        BOARD_SIZE = 16,
+        dotBoard,
+        dotCount,
+        dot,
+        i,
+        undoSize,
+        currentUndoSpot,
+        currentUndoSpotFromIndex,
+        UNDO_VISUALIZER = true; 
+             
+      function startup() {
+        
+        // CREATE BOARD
+        gridContainer = document.getElementById('grid-container');
+        dotBoard = document.createElement("div");
+        dotBoard.className = "board board0";
+        gridContainer.appendChild(dotBoard);        
+        dotCount = BOARD_SIZE * BOARD_SIZE
+        for (i = 0; i<dotCount; i++) {
+          dot = dot+i;
+          dot = document.createElement("div");
+          dot.className = "dot";
+          dotBoard.appendChild(dot);
+        }
+        
+        // ADD INITIAL STATE TO UNDO STACK
+        grid = document.getElementById('grid-container');
+        var gridContent = grid.innerHTML;        
+        undoStack.push(gridContent);
+        
+        if (UNDO_VISUALIZER = true){
+          var undoVisualizer = document.createElement("div");
+          undoVisualizer.id = "undo-history";
+          gridContainer.after(undoVisualizer);
+          undoVisualizer.innerHTML = "";
+          undoStack.forEach(element =>
+            undoVisualizer.innerHTML += element
+          )
+        };
+     
+        // SET UP COLOR PICKER
+        colorWell.value = defaultColor;
+        colorWell.addEventListener("input", updateFirst, false);
+        colorWell.addEventListener("change", updateAll, false);
+        colorWell.select();  
+      };
+      
+      function updateFirst(event) {
+        var p = document.querySelector("p");
+      
+        if (p) {
+          p.style.color = event.target.value;
+        }
+      };
+      
+      function updateAll(event) {
+        document.querySelectorAll("p").forEach(function(p) {
+          p.style.color = event.target.value;
+          alert(p.style.color);
+        })
+      };
+      
+      startup();
+      
+      
+      function initiateBoard(){
+        // BIND KEYBOARD CLICKS TO DOTS
+        var pressed = false;
+        const dots = document.querySelectorAll(".dot");
+        
+        Array.prototype.forEach.call(dots, function(dot, i) {
+          dot.onmousedown = function() {
+            pressed = true;
+            change(dot);
+            undoStackReset();
+          };
+          dot.onmouseenter = function() {
+            if (pressed == true) {
+              change(dot);
+            }
+          };
+          dot.onmouseup = function() {
+            pressed = false;
+            undoStackAdd();
+            updateUndoButton()
+          };
+          dot.onmouseout = function() {
+            if (pressed == true) {
+              // i don't think there's anything to cancel 
+            }
+          }
+        });
+        
+        
+        
+      
+        
+      }
+      // WHAT HAPPENS WHEN A DOT IS CLICKED
+      function change(key) {
+        key.style.backgroundColor = colorWell.value;
+      }
+      initiateBoard();
+      
+      function undoStackAdd(){
+        undoCount += 1;
+        console.log("undocount: " + undoCount);
+        
+        // ADD A CLONE OF THE GRID TO AN ARRAY
+        grid = document.getElementById('grid-container');
+        grid.firstElementChild.className = "board board" + undoStack.length;
+        var gridContent = grid.innerHTML;
+
+        undoStack.push(gridContent);
+        
+        // // limit stack to 50?
+        // if (undoStack.length > 50) {
+        //   undoStack.length = 50;
+        // }
+        if (UNDO_VISUALIZER = true){
+          var undoVisualizer = document.getElementById('undo-history');
+          undoVisualizer.innerHTML = "";
+          undoStack.forEach(element =>
+            undoVisualizer.innerHTML += element
+          );
+        }
+      }
+      
+      function undoStackReset(){
+        if (currentUndoSpot > 0){
+          undoStack = undoStack.slice(0,currentUndoSpot);
+          console.log("sliced to: " + undoStack.length);
+          undoPresses = 0;
+          undoCount = 0;
+          undoSize = 0;
+          currentUndoSpot = 0;
+        }
+      }
+      
+      // UPDATE UNDO BUTTON THINGS ON CHANGE
+      function updateUndoButton(currentSpot){
+        if (undoCount > 0){
+          undoButton.disabled = false;
+          undoButton.style.opacity = 1;
+          if (currentSpot == 0){
+            undoButton.disabled = true;
+            undoButton.style.opacity = .5;
+          };
+        } else{
+          undoButton.disabled = true;
+          undoButton.style.opacity = .5;
+        }
+      }
+      
+      // WHEN THE UNDO BUTTON IS PRESSED
+      document.getElementById("undo-button").onclick = function(){
+        
+        // get size of undo array
+        let undoSize = undoStack.length;
+        
+        // count how many times button was pressed
+        undoPresses += 1;
+        
+        // get the target undo location (and location counting from 0 lol)
+        currentUndoSpot = undoSize - undoPresses;        
+        currentUndoSpotFromIndex = currentUndoSpot - 1;
+        
+        // put desired undo into the main editor
+        document.getElementById('grid-container').innerHTML = undoStack[currentUndoSpotFromIndex];
+        
+        // light up current item in undo stack
+        if (UNDO_VISUALIZER = true){
+          let getLastUndoIndex = "board" + currentUndoSpotFromIndex;
+          document.querySelectorAll(".board").forEach(
+            function(board) {
+              if (board.classList.contains(getLastUndoIndex)){
+                board.style.border = "1px solid white"
+              } else{
+                board.style.border = "none";
+              }
+            }
+          )
+        }
+        
+        updateUndoButton(currentUndoSpotFromIndex);
+        
+        // re-set-up bindings 
+        initiateBoard();
+      }; 
+    </script>
+  </body>
+</html>
