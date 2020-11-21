@@ -53,13 +53,10 @@
     .board{
       display: grid;
       grid-gap: 3px 3px;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+      grid-template-rows: 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px;
+      grid-template-columns: 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px;
     }
     .dot{
-      height: 4.5vw;
-      width: 4.5vw;
-      max-height: 25px;
-      max-width: 25px;
       background-color: #19181A;
     }  
     input[type=color]{
@@ -75,8 +72,11 @@
     }
     #more-tools{
       display: flex;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
     }
-    #undo-tile-scale{
+    #undo-tile-scale, #undo-tile-gap{
       display: none;
     }
     #undo-button{
@@ -87,24 +87,28 @@
       opacity: .5;
       transition: opacity .1s ease-in-out;
     }
+    #undo-history:first-child { margin-top: auto }
     #undo-history{
       display: flex;
       flex-direction: row-reverse;
-      justify-content: flex-end;
+      justify-content:  flex-end;
+      flex-wrap: nowrap;
+      white-space: nowrap;
       margin-top: 20px;
-      border: 1px solid rgba(255,255,255,.8);
+      border: 1px solid rgba(255,255,255,.2);
       padding: 10px;
-      max-width: 100%;
+      max-width: 95%;
       overflow-x: scroll;
+      margin: 30px auto 0;
     }
     #undo-history .board{
-      grid-gap: 0 0 ;
+      grid-gap: 0 0;
       margin-right: 10px;
-
+      grid-template-rows: 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px;
+      grid-template-columns: 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px;
     }
     #undo-history .dot{
-      width: 2px;
-      height: 2px;
+
     }
     </style>
   </head>  
@@ -150,8 +154,12 @@
         <input type="checkbox" id="enable-undo-visualizer" name="enable-undo-visualizer">
       </div>
       <div id="undo-tile-scale">
-        <label for="select-undo-tile-scale">visualizer tile scale</label>
+        <label for="select-undo-tile-scale">&nbsp;&nbsp; scale</label>
         <input type="number" id="select-undo-tile-scale" name="select-undo-tile-scale" value="2" style="width:40px;">
+      </div>
+      <div id="undo-tile-gap">
+        <label for="select-undo-tile-gap">&nbsp;&nbsp; gap</label>
+        <input type="number" id="select-undo-tile-gap" name="select-undo-tile-gap" value="0" style="width:40px;">
       </div>
     </div>
     
@@ -165,6 +173,8 @@
         colorWell = document.getElementById("color-selected"),
         undoTileScaleContainer = document.getElementById("undo-tile-scale"),
         undoTileScale = document.getElementById("select-undo-tile-scale"),
+        undoTileGapContainer = document.getElementById("undo-tile-gap"),
+        undoTileGap = document.getElementById("select-undo-tile-gap"),
         defaultColor = "#000ff0",
         undoStack = [],
         grid,
@@ -182,9 +192,15 @@
         currentUndoSpotFromIndex,
         UNDO_VISUALIZER = false; 
              
-             
-             
-
+              
+      function saveValues(){
+        initialDotColor
+        newDotColor
+        backgroundColor
+        dotRadius
+        dotGlow
+      };
+      
       function updateInitialDotColor(color){
         const style = document.createElement('style');
         style.innerHTML = `
@@ -194,6 +210,7 @@
           }`;     
         // append the style to the DOM in <head> section
         document.head.appendChild(style);
+        saveValues();
       }
       function updateBackgroundColor(color){
         const style = document.createElement('style');
@@ -253,22 +270,51 @@
                 undoVisualizer.innerHTML += element
               );
               undoTileScaleContainer.style.display = "block";
+              undoTileGapContainer.style.display = "block";
           } else {
             UNDO_VISUALIZER = false;
             var undoVisualizer = document.getElementById('undo-history');
             undoVisualizer.remove();
             undoTileScaleContainer.style.display = "none";
+            undoTileGapContainer.style.display = "none";
           }
       });
-      undoTileScale.addEventListener("input", function() {
+      
+      function updateUndoVisualizerScale(n){
+        var n = n + "px"; 
         const style = document.createElement('style');
         style.innerHTML = `
-          #undo-history .dot {
-              width: `  + undoTileScale.value + `px;
-              height: ` + undoTileScale.value + `px;
-          }`;     
+          #undo-history .board{
+            grid-template-rows:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
+            grid-template-columns:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
+          } `;   
         // append the style to the DOM in <head> section
         document.head.appendChild(style);
+      }
+      
+      undoTileGap.addEventListener("input", function() {
+        const style = document.createElement('style');
+        if (undoTileGap.value > 0){
+          style.innerHTML = `
+            #undo-history .board {
+                grid-gap: `  + undoTileGap.value + `px `  + undoTileGap.value + `px;
+            }`;     
+        }else{
+          style.innerHTML = `
+          #undo-history .board {
+              grid-gap: 0 0;
+          }`; 
+        }
+        document.head.appendChild(style);
+        
+        updateUndoVisualizerScale(undoTileScale.value - 1);
+        setTimeout(function(){ 
+          updateUndoVisualizerScale(undoTileScale.value); 
+        }, 10);
+      }, false); 
+      
+      undoTileScale.addEventListener("input", function() {
+        updateUndoVisualizerScale(undoTileScale.value);
       }, false); 
       
       glowAmountSelect.addEventListener("input", function() {
