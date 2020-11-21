@@ -66,9 +66,18 @@
       /* border: none;
       background-color: transparent; */
     }
+    input[type=number]{
+      background-color:transparent;
+    }
     button{
       background-color: black;
       border-width: 1px;
+    }
+    #more-tools{
+      display: flex;
+    }
+    #undo-tile-scale{
+      display: none;
     }
     #undo-button{
       opacity: .5;
@@ -119,12 +128,12 @@
       <div id="select-dot-radius-amount" style="width:80px;">
         <label for="select-dot-radius-amount">dot radius</label>
         <input type="number" id="dot-radius-amount" name="select-dot-radius-amount"
-           value="0" style="background-color:transparent;width:80px;">
+           value="0" style="width:80px;">
       </div>
       <div id="select-glow-amount" style="width:60px;">
         <label for="select-glow-amount">glow</label>
         <input type="number" id="glow-amount" name="select-glow-amount"
-           value="0" style="background-color:transparent;width:40px;">
+           value="0" style="width:40px;">
       </div>
       <div class="undo">
         <button id="undo-button" disabled>undo</button>
@@ -135,6 +144,16 @@
     </div>
     <div id="grid-container" class="board-container">
     </div>
+    <div id="more-tools">
+      <div class="check">
+        <label for="enable-undo-visualizer">Enable undo visualizer</label>
+        <input type="checkbox" id="enable-undo-visualizer" name="enable-undo-visualizer">
+      </div>
+      <div id="undo-tile-scale">
+        <label for="select-undo-tile-scale">visualizer tile scale</label>
+        <input type="number" id="select-undo-tile-scale" name="select-undo-tile-scale" value="2" style="width:40px;">
+      </div>
+    </div>
     
     <script>
       
@@ -144,6 +163,8 @@
         glowAmountSelect = document.getElementById("glow-amount"),
         dotRadiusSelect = document.getElementById("dot-radius-amount"),
         colorWell = document.getElementById("color-selected"),
+        undoTileScaleContainer = document.getElementById("undo-tile-scale"),
+        undoTileScale = document.getElementById("select-undo-tile-scale"),
         defaultColor = "#000ff0",
         undoStack = [],
         grid,
@@ -212,21 +233,43 @@
         grid = document.getElementById('grid-container');
         var gridContent = grid.innerHTML;        
         undoStack.push(gridContent);
-        
-        if (UNDO_VISUALIZER == true){
-          var undoVisualizer = document.createElement("div");
-          undoVisualizer.id = "undo-history";
-          gridContainer.after(undoVisualizer);
-          undoVisualizer.innerHTML = "";
-          undoStack.forEach(element =>
-            undoVisualizer.innerHTML += element
-          )
-        };
-     
+
       };
       
       
       startup();
+      
+      
+      var undoVisualizerCheckbox = document.querySelector("input[name=enable-undo-visualizer]");
+      
+      undoVisualizerCheckbox.addEventListener( 'change', function() {
+          if(this.checked) {
+              UNDO_VISUALIZER = true;
+              var undoVisualizer = document.createElement("div");
+              undoVisualizer.id = "undo-history";
+              gridContainer.after(undoVisualizer);
+              undoVisualizer.innerHTML = "";
+              undoStack.forEach(element =>
+                undoVisualizer.innerHTML += element
+              );
+              undoTileScaleContainer.style.display = "block";
+          } else {
+            UNDO_VISUALIZER = false;
+            var undoVisualizer = document.getElementById('undo-history');
+            undoVisualizer.remove();
+            undoTileScaleContainer.style.display = "none";
+          }
+      });
+      undoTileScale.addEventListener("input", function() {
+        const style = document.createElement('style');
+        style.innerHTML = `
+          #undo-history .dot {
+              width: `  + undoTileScale.value + `px;
+              height: ` + undoTileScale.value + `px;
+          }`;     
+        // append the style to the DOM in <head> section
+        document.head.appendChild(style);
+      }, false); 
       
       glowAmountSelect.addEventListener("input", function() {
         var dots = document.querySelectorAll(".dot");
