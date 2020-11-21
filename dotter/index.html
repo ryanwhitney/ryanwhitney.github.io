@@ -3,24 +3,28 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello!</title>
+    <meta name='viewport' 
+ content='width=device-width, initial-scale=1.0, maximum-scale=1.0, 
+ user-scalable=0'>
+     <title>dotter</title>
     
     <style>
     
     /* CSS files add styling rules to your content */
     *{
-    -webkit-touch-callout: none; /* iOS Safari */
-      -webkit-user-select: none; /* Safari */
-       -khtml-user-select: none; /* Konqueror HTML */
-         -moz-user-select: none; /* Old versions of Firefox */
-          -ms-user-select: none; /* Internet Explorer/Edge */
-              user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
       color: white;
       font-family:  SFMono-Regular, "SFMono-Regular", SFMono, Menlo,
         Monaco, Consolas,"Liberation Mono","Courier New", monospace;
+      text-transform: lowercase;
     }
-    
+    label{
+      text-shadow: -1px 1px 0 rgba(0,0,0,.2),
+                    1px 1px 0 rgba(0,0,0,.2),
+                   1px -1px 0 rgba(0,0,0,.2),
+                  -1px -1px 0 rgba(0,0,0,.2),
+                  0px 1px 0 rgba(0,0,0,.2),
+                  1px 0px 0 rgba(0,0,0,.2);
+    }
     body {
       font-family: helvetica, arial, sans-serif;
       height: 100vh;
@@ -31,6 +35,15 @@
     .tools{
       display: flex;
       height: 10%;
+      justify-content: space-around;
+    }
+    #grid-container{
+      -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Old versions of Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
     }
     .board-container{
       display: flex;
@@ -50,8 +63,8 @@
       background-color: #19181A;
     }  
     input[type=color]{
-      border: none;
-      background-color: transparent;
+      /* border: none;
+      background-color: transparent; */
     }
     button{
       background-color: black;
@@ -88,9 +101,30 @@
   </head>  
   <body>
     <div class="tools">
+      <div id="initial-dot-color-select">
+        <label for="select-color">Initial Dot Color</label>
+        <input type="color" id="initial-dot-color-selected" name="select-initial-dot-color"
+           value="#1f1f1f">
+      </div>
       <div id="color-select">
+        <label for="select-color">New Dot Color</label>
         <input type="color" id="color-selected" name="select-color"
            value="#e66465">
+      </div>
+      <div id="background-select">
+        <label for="select-color">Background Color</label>
+        <input type="color" id="background-color-selected" name="select-background-color"
+           value="#19181A">
+      </div>
+      <div id="select-dot-radius-amount" style="width:80px;">
+        <label for="select-dot-radius-amount">dot radius</label>
+        <input type="number" id="dot-radius-amount" name="select-dot-radius-amount"
+           value="0" style="background-color:transparent;width:80px;">
+      </div>
+      <div id="select-glow-amount" style="width:60px;">
+        <label for="select-glow-amount">glow</label>
+        <input type="number" id="glow-amount" name="select-glow-amount"
+           value="0" style="background-color:transparent;width:40px;">
       </div>
       <div class="undo">
         <button id="undo-button" disabled>undo</button>
@@ -105,6 +139,10 @@
     <script>
       
       var gridContainer,
+        bgColorSelect = document.getElementById("background-color-selected"),
+        initialDotColorSelect = document.getElementById("initial-dot-color-selected"),
+        glowAmountSelect = document.getElementById("glow-amount"),
+        dotRadiusSelect = document.getElementById("dot-radius-amount"),
         colorWell = document.getElementById("color-selected"),
         defaultColor = "#000ff0",
         undoStack = [],
@@ -117,13 +155,46 @@
         dotCount,
         dot,
         i,
+        color,
         undoSize,
         currentUndoSpot,
         currentUndoSpotFromIndex,
-        UNDO_VISUALIZER = true; 
+        UNDO_VISUALIZER = false; 
              
+             
+             
+
+      function updateInitialDotColor(color){
+        const style = document.createElement('style');
+        style.innerHTML = `
+          .dot {
+              --dotColor: ` + color + `;
+              background-color: var(--dotColor);
+          }`;     
+        // append the style to the DOM in <head> section
+        document.head.appendChild(style);
+      }
+      function updateBackgroundColor(color){
+        const style = document.createElement('style');
+        style.innerHTML = `
+          body {
+              --bgColor: ` + color + `;
+              background-color: var(--bgColor);
+          }`;     
+        // append the style to the DOM in <head> section
+        document.head.appendChild(style);
+      }      
       function startup() {
-        
+        document.body.style.backgroundColor = bgColorSelect.value;
+        const style = document.createElement('style');
+        // add CSS styles
+        style.innerHTML = `
+            .dot {
+                background-color:`+ initialDotColorSelect.value+`
+            }
+        `;     
+        // append the style to the DOM in <head> section
+        document.head.appendChild(style);
         // CREATE BOARD
         gridContainer = document.getElementById('grid-container');
         dotBoard = document.createElement("div");
@@ -142,7 +213,7 @@
         var gridContent = grid.innerHTML;        
         undoStack.push(gridContent);
         
-        if (UNDO_VISUALIZER = true){
+        if (UNDO_VISUALIZER == true){
           var undoVisualizer = document.createElement("div");
           undoVisualizer.id = "undo-history";
           gridContainer.after(undoVisualizer);
@@ -152,30 +223,35 @@
           )
         };
      
-        // SET UP COLOR PICKER
-        colorWell.value = defaultColor;
-        colorWell.addEventListener("input", updateFirst, false);
-        colorWell.addEventListener("change", updateAll, false);
-        colorWell.select();  
       };
       
-      function updateFirst(event) {
-        var p = document.querySelector("p");
-      
-        if (p) {
-          p.style.color = event.target.value;
-        }
-      };
-      
-      function updateAll(event) {
-        document.querySelectorAll("p").forEach(function(p) {
-          p.style.color = event.target.value;
-          alert(p.style.color);
-        })
-      };
       
       startup();
       
+      glowAmountSelect.addEventListener("input", function() {
+        var dots = document.querySelectorAll(".dot");
+        dots.forEach(item => 
+          item.style.cssText += `box-shadow: 0 0 ` + glowAmountSelect.value + `px  var(--dotColor),
+               0 0 ` + glowAmountSelect.value + `px  var(--dotColor);`
+        );
+      }, false); 
+      dotRadiusSelect.addEventListener("input", function() {
+        const style = document.createElement('style');
+        style.innerHTML = `
+          .dot {
+              border-radius:` + dotRadiusSelect.value + `px;
+          }`;     
+        // append the style to the DOM in <head> section
+        document.head.appendChild(style);
+      }, false); 
+            
+      initialDotColorSelect.addEventListener("input", function() {
+        updateInitialDotColor(initialDotColorSelect.value);
+      }, false); 
+         
+      bgColorSelect.addEventListener("input", function() {
+        document.body.style.backgroundColor = bgColorSelect.value;
+      }, false); 
       
       function initiateBoard(){
         // BIND KEYBOARD CLICKS TO DOTS
@@ -211,8 +287,11 @@
         
       }
       // WHAT HAPPENS WHEN A DOT IS CLICKED
-      function change(key) {
-        key.style.backgroundColor = colorWell.value;
+      function change(dot) {
+        
+        // let root = document.documentElement;
+        // dot.style.backgroundColor = colorWell.value;
+        dot.style.cssText += `--dotColor: ` + colorWell.value + `;background-color: var(--dotColor);z-index:99999;`;
       }
       initiateBoard();
       
@@ -231,7 +310,7 @@
         // if (undoStack.length > 50) {
         //   undoStack.length = 50;
         // }
-        if (UNDO_VISUALIZER = true){
+        if (UNDO_VISUALIZER == true){
           var undoVisualizer = document.getElementById('undo-history');
           undoVisualizer.innerHTML = "";
           undoStack.forEach(element =>
@@ -283,7 +362,7 @@
         document.getElementById('grid-container').innerHTML = undoStack[currentUndoSpotFromIndex];
         
         // light up current item in undo stack
-        if (UNDO_VISUALIZER = true){
+        if (UNDO_VISUALIZER == true){
           let getLastUndoIndex = "board" + currentUndoSpotFromIndex;
           document.querySelectorAll(".board").forEach(
             function(board) {
