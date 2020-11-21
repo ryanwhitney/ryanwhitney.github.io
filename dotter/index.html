@@ -17,6 +17,10 @@
         Monaco, Consolas,"Liberation Mono","Courier New", monospace;
       text-transform: lowercase;
     }
+    pre{
+      max-width: 100%;
+      line-break: normal;
+    }
     label{
       text-shadow: -1px 1px 0 rgba(0,0,0,.2),
                     1px 1px 0 rgba(0,0,0,.2),
@@ -113,6 +117,7 @@
     </style>
   </head>  
   <body>
+    <pre id="raw"></pre>
     <div class="tools">
       <div id="initial-dot-color-select">
         <label for="select-color">Initial Dot Color</label>
@@ -307,10 +312,11 @@
         }
         document.head.appendChild(style);
         
+        // scale must be changed to recalculate grid-gap, or something. it seems to require this.
         updateUndoVisualizerScale(undoTileScale.value - 1);
         setTimeout(function(){ 
           updateUndoVisualizerScale(undoTileScale.value); 
-        }, 10);
+        }, 15);
       }, false); 
       
       undoTileScale.addEventListener("input", function() {
@@ -369,11 +375,6 @@
             }
           }
         });
-        
-        
-        
-      
-        
       }
       // WHAT HAPPENS WHEN A DOT IS CLICKED
       function change(dot) {
@@ -469,6 +470,89 @@
         // re-set-up bindings 
         initiateBoard();
       }; 
+      
+      var gridArray = [];
+
+      function calculatePXON(){
+        var dots = document.querySelectorAll("#grid-container .dot");
+        var currentBoard = [];
+        dots.forEach(dot => 
+          currentBoard.push(dot)
+        );
+        
+        for(i = 0; i < BOARD_SIZE; i++){
+          // console.log(oldNum);
+          if(i < 1){
+            gridArray[i] = currentBoard.slice(0, BOARD_SIZE);
+          }else{
+            var oldVal = (i) * BOARD_SIZE;
+            var newVal = (i + 1) * BOARD_SIZE;
+            gridArray[i] = currentBoard.slice(oldVal, newVal);
+          }
+
+          
+        }
+        return gridArray;
+      }
+      
+      var createPXON = function(){
+        var gridArray = calculatePXON();
+        pxon = {
+          exif: {
+            software: 'https://pxonloop.glitch.me',
+            artist: "jenn schiffer",
+            imageDescription: "smile",
+            userComment: "an example pixel drawing to show off pxon",
+            copyright: "jenn schiffer 2018",
+            dateTime: "2015-09-17T15:21:51.761Z"
+          },
+          pxif: {
+            pixels: [
+            //   {
+            //   x: 75,
+            //   y: 69,
+            //   color: "rgba(0, 0, 0, 1)",
+            //   size: 15
+            // },
+            // {
+            //   x: 80,
+            //   y: 84,
+            //   color: "rgba(0, 0, 0, 1)",
+            // },
+            // {
+            //   x: 96,
+            //   y: 82,
+            //   color: "rgba(0, 0, 0, 1)",
+            // }
+          ]
+          }
+        };
+        var n = 0;
+        for(x = 0; x < BOARD_SIZE; x++){
+          for(y = 0; y < BOARD_SIZE; y++){
+              
+              var pixel = new Object();  
+              pixel.x = x;
+              pixel.y = y;
+              pixel.color = gridArray[x][y].getPropertyValue('--dotColor');
+              pxon.pxif.pixels[n] = pixel;
+              
+                           
+
+
+              console.log(gridArray[x][y].style.backgroundColor);
+              n++;
+          }
+        }
+  
+      }
+      createPXON();
+      document.getElementById("raw").innerHTML = JSON.stringify(pxon);
+
+      
+      
+      
+      
     </script>
   </body>
 </html>
