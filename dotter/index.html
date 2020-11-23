@@ -819,12 +819,9 @@ function bindClicksForCurrentBoard(){
 function draw(dot, color) {
   dot.style.cssText += `--dotColor:` + color + `;background-color: var(--dotColor);z-index:99999;`;
   createPXON();
-  document.getElementById("raw").innerHTML = JSON.stringify(pxon, null, 3);
-  return false
+  document.getElementById("raw").innerHTML = JSON.stringify(pxon, null, 3); 
 }
-
-
-      
+ 
 //////// UNDO LOGIC 
 
 function undoStackAdd(){
@@ -952,7 +949,7 @@ function getCurrentPixels(){
 }
 
 // Export PXON
-var createPXON = function(){
+function createPXON(){
   var gridArray = getCurrentPixels();
   pxon = {
     exif: {
@@ -1012,12 +1009,16 @@ function line(x1,y1,x2,y2,color){
   if( x1.isNaN && y1.isNaN && x2.isNaN && y2.isNaN ){
     console.log("all coordinates need to be defined")
   } else{
+    
     if(!color){
       color = newDrawColor;
     }
-    for(r = x1; r < x2; r++){
-      draw(gridArray[r][y2], color);
-      console.log("drew at" + r + ", " + y2);
+    
+    var diffX = x2-x1;
+    var diffY = y2-y1;
+    for(i = x1; i <= x2; i++){
+        console.log("i: " + i);
+        draw(gridArray[i][y2],color);
     }
   }
 }
