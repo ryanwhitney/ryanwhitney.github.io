@@ -20,6 +20,10 @@
     pre{
       max-width: 100%;
       line-break: normal;
+      height: 100px;
+      white-space: pre-line;
+      overflow: hidden;
+      overflow-y: scroll;
     }
     label{
       text-shadow: -1px 1px 0 rgba(0,0,0,.2),
@@ -171,16 +175,6 @@
     <script>
       
       var gridContainer,
-        bgColorSelect = document.getElementById("background-color-selected"),
-        initialDotColorSelect = document.getElementById("initial-dot-color-selected"),
-        glowAmountSelect = document.getElementById("glow-amount"),
-        dotRadiusSelect = document.getElementById("dot-radius-amount"),
-        colorWell = document.getElementById("color-selected"),
-        undoTileScaleContainer = document.getElementById("undo-tile-scale"),
-        undoTileScale = document.getElementById("select-undo-tile-scale"),
-        undoTileGapContainer = document.getElementById("undo-tile-gap"),
-        undoTileGap = document.getElementById("select-undo-tile-gap"),
-        defaultColor = "#000ff0",
         undoStack = [],
         grid,
         undoPresses = 0,
@@ -196,95 +190,89 @@
         currentUndoSpot,
         currentUndoSpotFromIndex,
         UNDO_VISUALIZER = false; 
-             
-              
-      function saveValues(){
-        initialDotColor
-        newDotColor
-        backgroundColor
-        dotRadius
-        dotGlow
-      };
       
-      function updateInitialDotColor(color){
+//////// SET UP OPTIONS + USER INPUTS
+
+// inputInitalDotColor
+// inputNewDrawColor
+// inputBackgroundColor
+// inputDotRadius
+// inputGlowRadius
+// inputUndoVisualizerCheckbox
+// inputUndoVisualzierScale
+// inputUndoVisualizerGap
+
+      var initialDotColorSelect = document.getElementById("initial-dot-color-selected"),
+      colorWell = document.getElementById("color-selected"),
+      bgColorSelect = document.getElementById("background-color-selected"),
+      dotRadiusSelect = document.getElementById("dot-radius-amount"),
+      glowAmountSelect = document.getElementById("glow-amount"),
+      undoVisualizerCheckbox = document.querySelector("input[name=enable-undo-visualizer]"),
+      undoTileScaleContainer = document.getElementById("undo-tile-scale"),
+      undoTileScale = document.getElementById("select-undo-tile-scale"),
+      undoTileGapContainer = document.getElementById("undo-tile-gap"),
+      undoTileGap = document.getElementById("select-undo-tile-gap");
+      
+      
+      // Bind to input changes on INITIAL dot color  
+      initialDotColorSelect.addEventListener("input", function() {
+        updateInitialDotColor(initialDotColorSelect.value);
+      }, false); 
+         
+      // Note: handling NEW dot color happens in the draw() function
+            
+      // Bind to input changes on BACKGROUND color 
+      bgColorSelect.addEventListener("input", function() {
+        document.body.style.backgroundColor = bgColorSelect.value;
+      }, false); 
+      
+      // Bind to input changes on DOT RADIUS
+      dotRadiusSelect.addEventListener("input", function() {
         const style = document.createElement('style');
         style.innerHTML = `
           .dot {
-              --dotColor: ` + color + `;
-              background-color: var(--dotColor);
+              border-radius:` + dotRadiusSelect.value + `px;
           }`;     
-        // append the style to the DOM in <head> section
         document.head.appendChild(style);
-        saveValues();
-      }
-      function updateBackgroundColor(color){
-        const style = document.createElement('style');
-        style.innerHTML = `
-          body {
-              --bgColor: ` + color + `;
-              background-color: var(--bgColor);
-          }`;     
-        // append the style to the DOM in <head> section
-        document.head.appendChild(style);
-      }      
-      function startup() {
-        document.body.style.backgroundColor = bgColorSelect.value;
-        const style = document.createElement('style');
-        // add CSS styles
-        style.innerHTML = `
-            .dot {
-                background-color:`+ initialDotColorSelect.value+`
-            }
-        `;     
-        // append the style to the DOM in <head> section
-        document.head.appendChild(style);
-        // CREATE BOARD
-        gridContainer = document.getElementById('grid-container');
-        dotBoard = document.createElement("div");
-        dotBoard.className = "board board0";
-        gridContainer.appendChild(dotBoard);        
-        dotCount = BOARD_SIZE * BOARD_SIZE
-        for (i = 0; i<dotCount; i++) {
-          dot = dot+i;
-          dot = document.createElement("div");
-          dot.className = "dot";
-          dotBoard.appendChild(dot);
-        }
-        
-        // ADD INITIAL STATE TO UNDO STACK
-        grid = document.getElementById('grid-container');
-        var gridContent = grid.innerHTML;        
-        undoStack.push(gridContent);
-
-      };
+      }, false); 
       
+      // Bind to input changes on GLOW AMOUNT
+      glowAmountSelect.addEventListener("input", function() {
+        var dots = document.querySelectorAll(".dot");
+        dots.forEach(item => 
+          item.style.cssText += `box-shadow: 0 0 ` + glowAmountSelect.value + `px  var(--dotColor),
+               0 0 ` + glowAmountSelect.value + `px  var(--dotColor);`
+        );
+      }, false); 
       
-      startup();
-      
-      
-      var undoVisualizerCheckbox = document.querySelector("input[name=enable-undo-visualizer]");
-      
+      // Bind & handle changes on UNDO VISUALIZER CHECKBOX
       undoVisualizerCheckbox.addEventListener( 'change', function() {
-          if(this.checked) {
-              UNDO_VISUALIZER = true;
-              var undoVisualizer = document.createElement("div");
-              undoVisualizer.id = "undo-history";
-              gridContainer.after(undoVisualizer);
-              undoVisualizer.innerHTML = "";
-              undoStack.forEach(element =>
-                undoVisualizer.innerHTML += element
-              );
-              undoTileScaleContainer.style.display = "block";
-              undoTileGapContainer.style.display = "block";
-          } else {
-            UNDO_VISUALIZER = false;
-            var undoVisualizer = document.getElementById('undo-history');
-            undoVisualizer.remove();
-            undoTileScaleContainer.style.display = "none";
-            undoTileGapContainer.style.display = "none";
-          }
+        if(this.checked) {
+            UNDO_VISUALIZER = true;
+            var undoVisualizer = document.createElement("div");
+            undoVisualizer.id = "undo-history";
+            gridContainer.after(undoVisualizer);
+            undoVisualizer.innerHTML = "";
+            undoStack.forEach(element =>
+              undoVisualizer.innerHTML += element
+            );
+            undoTileScaleContainer.style.display = "block";
+            undoTileGapContainer.style.display = "block";
+        } else {
+          UNDO_VISUALIZER = false;
+          var undoVisualizer = document.getElementById('undo-history');
+          undoVisualizer.remove();
+          undoTileScaleContainer.style.display = "none";
+          undoTileGapContainer.style.display = "none";
+        }
       });
       
+      // Bind  to changes on UNDO VISUALIZER SCALE
+      undoTileScale.addEventListener("input", function() {
+        updateUndoVisualizerScale(undoTileScale.value);
+      }, false); 
+      
+      // Handle changes to UNDO VISUALIZER SCALE
       function updateUndoVisualizerScale(n){
         var n = n + "px"; 
         const style = document.createElement('style');
@@ -293,10 +281,10 @@
             grid-template-rows:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
             grid-template-columns:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
           } `;   
-        // append the style to the DOM in <head> section
         document.head.appendChild(style);
       }
       
+      // Handle changes to UNDO VISUALIZER SCALE
       undoTileGap.addEventListener("input", function() {
         const style = document.createElement('style');
         if (undoTileGap.value > 0){
@@ -319,36 +307,70 @@
         }, 15);
       }, false); 
       
-      undoTileScale.addEventListener("input", function() {
-        updateUndoVisualizerScale(undoTileScale.value);
-      }, false); 
       
-      glowAmountSelect.addEventListener("input", function() {
-        var dots = document.querySelectorAll(".dot");
-        dots.forEach(item => 
-          item.style.cssText += `box-shadow: 0 0 ` + glowAmountSelect.value + `px  var(--dotColor),
-               0 0 ` + glowAmountSelect.value + `px  var(--dotColor);`
-        );
-      }, false); 
-      dotRadiusSelect.addEventListener("input", function() {
-        const style = document.createElement('style');
-        style.innerHTML = `
-          .dot {
-              border-radius:` + dotRadiusSelect.value + `px;
-          }`;     
-        // append the style to the DOM in <head> section
-        document.head.appendChild(style);
-      }, false); 
-            
-      initialDotColorSelect.addEventListener("input", function() {
-        updateInitialDotColor(initialDotColorSelect.value);
-      }, false); 
-         
-      bgColorSelect.addEventListener("input", function() {
-        document.body.style.backgroundColor = bgColorSelect.value;
-      }, false); 
+//////// START UP   
+
+function updateInitialDotColor(color){
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .dot {
+        --dotColor: ` + color + `;
+        background-color: var(--dotColor); 
+    }`;     
+  // append the style to the DOM in <head> section
+  document.head.appendChild(style);
+  saveValues();
+}
+function updateBackgroundColor(color){
+  const style = document.createElement('style');
+  style.innerHTML = `
+    body {
+        --bgColor: ` + color + `;
+        background-color: var(--bgColor);
+    }`;     
+  // append the style to the DOM in <head> section
+  document.head.appendChild(style);
+}      
+
+
+function startup() {
+  document.body.style.backgroundColor = bgColorSelect.value;
+  const style = document.createElement('style');
+  // add CSS styles
+  style.innerHTML = `
+      .dot {
+          background-color:`+ initialDotColorSelect.value+`
+      }
+  `;     
+  // append the style to the DOM in <head> section
+  document.head.appendChild(style);
+  // CREATE BOARD
+  gridContainer = document.getElementById('grid-container');
+  dotBoard = document.createElement("div");
+  dotBoard.className = "board board0";
+  gridContainer.appendChild(dotBoard);        
+  dotCount = BOARD_SIZE * BOARD_SIZE
+  for (i = 0; i<dotCount; i++) {
+    dot = dot+i;
+    dot = document.createElement("div");
+    dot.className = "dot";
+    dotBoard.appendChild(dot);
+  }
+  
+  // ADD INITIAL STATE TO UNDO STACK
+  grid = document.getElementById('grid-container');
+  var gridContent = grid.innerHTML;        
+  undoStack.push(gridContent);
+
+};
+
+
+startup();   
       
-      function initiateBoard(){
+//////// BIND CLICKS TO ACTIVE BOARD PIXELS
+      
+      function bindClicksForCurrentBoard(){
+        
         // BIND KEYBOARD CLICKS TO DOTS
         var pressed = false;
         const dots = document.querySelectorAll(".dot");
@@ -356,12 +378,12 @@
         Array.prototype.forEach.call(dots, function(dot, i) {
           dot.onmousedown = function() {
             pressed = true;
-            change(dot);
+            draw(dot);
             undoStackReset();
           };
           dot.onmouseenter = function() {
             if (pressed == true) {
-              change(dot);
+              draw(dot);
             }
           };
           dot.onmouseup = function() {
@@ -376,18 +398,25 @@
           }
         });
       }
+      
+      
+//////// DRAW LOGIC
+      
       // WHAT HAPPENS WHEN A DOT IS CLICKED
-      function change(dot) {
-        
-        // let root = document.documentElement;
-        // dot.style.backgroundColor = colorWell.value;
-        dot.style.cssText += `--dotColor: ` + colorWell.value + `;background-color: var(--dotColor);z-index:99999;`;
+      function draw(dot) {
+        dot.style.cssText += `--dotColor:` + colorWell.value + `;background-color: var(--dotColor);z-index:99999;`;
+        createPXON();
+        document.getElementById("raw").innerHTML = JSON.stringify(pxon, undefined, 3);
       }
-      initiateBoard();
+      
+      bindClicksForCurrentBoard();
+
+      
+//////// UNDO LOGIC 
       
       function undoStackAdd(){
         undoCount += 1;
-        console.log("undocount: " + undoCount);
+        // console.log("undocount: " + undoCount);
         
         // ADD A CLONE OF THE GRID TO AN ARRAY
         grid = document.getElementById('grid-container');
@@ -412,7 +441,7 @@
       function undoStackReset(){
         if (currentUndoSpot > 0){
           undoStack = undoStack.slice(0,currentUndoSpot);
-          console.log("sliced to: " + undoStack.length);
+          // console.log("sliced to: " + undoStack.length);
           undoPresses = 0;
           undoCount = 0;
           undoSize = 0;
@@ -468,8 +497,13 @@
         updateUndoButton(currentUndoSpotFromIndex);
         
         // re-set-up bindings 
-        initiateBoard();
+        bindClicksForCurrentBoard();
       }; 
+ 
+ 
+ 
+ 
+//////// PXON STUFF 
       
       var gridArray = [];
 
@@ -502,64 +536,44 @@
         var gridArray = getCurrentPixels();
         pxon = {
           exif: {
-            software: 'https://pxonloop.glitch.me',
-            artist: "jenn schiffer",
-            imageDescription: "smile",
+            software: "ryanwhitney.github.io/dotter",
+            artist: "ryan",
+            imageDescription: "dots!",
             userComment: "an example pixel drawing to show off pxon",
-            copyright: "ryan whitney 2020",
-            dateTime: "2015-09-17T15:21:51.761Z"
+            copyright: "2020",
+            dateTime: "2020-11-17T15:21:51.761Z"
           },
           pxif: {
-            pixels: [
-            //   {
-            //   x: 75,
-            //   y: 69,
-            //   color: "rgba(0, 0, 0, 1)",
-            //   size: 15
-            // },
-            // {
-            //   x: 80,
-            //   y: 84,
-            //   color: "rgba(0, 0, 0, 1)",
-            // },
-            // {
-            //   x: 96,
-            //   y: 82,
-            //   color: "rgba(0, 0, 0, 1)",
-            // }
-          ]
+            pixels: []
           }
         };
+        
+        // Get color from each x,y coordinate
+        var defaultColor = initialDotColorSelect.value
         function getpixelColor(pxArray){
-          if(pxArray[x][y] != undefined){
-            return pxArray[x][y].getPropertyValue('--dotColor')
+          var xyPixelColor = pxArray[x][y].style.getPropertyValue('--dotColor');
+          if(xyPixelColor.length > 0){
+            return xyPixelColor;
           }
           else{
-            return "#1f1f1f"
+            return defaultColor;
           }
         }
         // From getCurrentPixels() we have an array element that contains arrays of each row of pixels. This lets us grab XY coordinates. 
-        
-        
-        
         var n = 0;
         for(x = 0; x < BOARD_SIZE; x++){
-          for(y = 0; y < BOARD_SIZE; y++){
-              
+          for(y = 0; y < BOARD_SIZE; y++){            
               var pixel = new Object();  
               pixel.x = x;
               pixel.y = y;
+              pixel.size = 1;
               pixel.color = getpixelColor(gridArray);
               pxon.pxif.pixels[n] = pixel;
-              
-              console.log(pixel.color);
               n++;
           }
-        }
-  
+        }  
       }
-      createPXON();
-      document.getElementById("raw").innerHTML = JSON.stringify(pxon);
+      
 
       
       
