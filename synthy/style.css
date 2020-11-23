@@ -1,0 +1,169 @@
+:root {
+  --outline-color: black; 
+  --border-width: 1px; 
+
+}
+
+h3{
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+input, select, option{
+  font-family:  SFMono-Regular,
+  "SFMono-Regular",
+  SFMono,
+  Menlo,
+  Monaco,
+  Consolas,
+  "Liberation Mono",
+  "Courier New",
+  monospace;
+
+}
+html{
+  font-size: 1.5em;
+  font-family:  SFMono-Regular,
+                "SFMono-Regular",
+                SFMono,
+                Menlo,
+                Monaco,
+                Consolas,
+                "Liberation Mono",
+                "Courier New",
+                monospace;
+  text-transform: uppercase;
+}
+a.button.on{
+  font-family: inherit;
+  font-size:10px;
+  padding: 5px 10px;
+  display: inline-block;
+  background-color: #eee;
+  outline: none;
+  border-radius: 2px;
+  border-width:1px;
+  border-color: white;
+  border-top-color: rgba(255,255,255,1);
+  border-right-color: rgba(255,255,255,1);
+  border-bottom-color: rgba(255,255,255,1);
+  border-left-color: rgba(255,255,255,1);
+  border-bottom-width: 1px;
+  box-shadow: 0 0 1px 1px rgba(0,0,0,.1);
+}
+#synth-body{
+  background: #eeeeee;
+  padding: 20px;
+  border-radius: 15px;
+  color: #333;
+  font-size: .25rem;
+}
+#top-controls{
+  padding-bottom: 16px;
+  display: flex; 
+  align-items: center;
+}
+.onLight{
+  height: 5px;
+  width: 5px; 
+  display: inline-block;
+  position: relative;
+  left: 0px;
+  top: -1px;
+  border-radius: 100%;
+  background-color: rgba(120,30,30,1);
+  box-shadow: 0 0 1px rgba(0,0,0,.7);
+}
+.onLight.on{
+  background-color: rgba(255,10,10,1);
+  box-shadow: 0 0 10px rgba(250,25,25,1),
+              0 0 2px rgba(255,125,125,.5),
+              0 0 5px rgba(180,20,180,.7),
+              0 0 1px rgba(0,0,0,.7);
+}
+.instruments{
+  display: flex;
+}
+.instruments .module{
+  width: 150px;
+  border: 1px solid #222;
+  border-radius: 3px;
+  padding: 10px;
+  margin: 0 18px 0 ;
+  background: #222;
+  color: white;
+  
+  ;
+}
+.keyboard{
+  display: flex;
+  max-width: 310px;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+   -khtml-user-select: none; /* Konqueror HTML */
+     -moz-user-select: none; /* Old versions of Firefox */
+      -ms-user-select: none; /* Internet Explorer/Edge */
+          user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+  background-color: white;
+}
+.key{
+  vertical-align: bottom;
+  text-align: center;
+  /* transition: background-color .2s ease; */
+}
+.white{
+  line-height: 270px;
+  color: rgba(0,0,0,.4);
+  background-color: white;
+  font-size: .25rem;
+  height: 6rem;
+  width: 0.875rem;
+  border: var(--border-width) solid var(--outline-color);
+  border-left: calc(var(--border-width)/2) solid var(--outline-color);
+  border-right: calc(var(--border-width)/2) solid var(--outline-color);
+}
+.white:first-of-type{
+  border-left: var(--border-width) solid var(--outline-color);
+}
+.white:last-of-type{
+  border-right: var(--border-width) solid var(--outline-color);
+}
+.blackKeyContainer{
+ width: 0;
+ overflow: visible;
+ background-color: black;
+}
+.black{
+  line-height: 178px;
+  color: rgba(255,255,255,.8);
+  font-size: .25rem;
+  font-weight: 100;
+  width: 0.4375rem;
+  height: 3.9375rem; 
+  border: var(--border-width) solid var(--outline-color);
+  background-color: black;
+  display:inline-block;
+  overflow: visible;
+  position:relative;
+  left: calc(-0.4375rem/2 - 1px);
+}
+.setting-pane{
+  width: 150px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  padding: 10px;
+  margin: 18px 18px 0 0 ;
+}
+.settings-area{
+  display: flex;
+}
+.select-items{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(75px, 2fr));
+}
+.envelope .select-items input{
+  width: 70%;
+}
+.level-slide label,
+.level-slide small{
+  vertical-align: super;
+}

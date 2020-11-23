@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>it's a synth</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body id="home">
+    <div id="synth-body">
+        <div id="top-controls">
+            <a id="on" class="button on">
+                <div id="onLight"></div>
+                on
+            </a>
+            <div id="octave" style="margin-left:112px;">
+                <label>Octave Shift</label>
+                <button onclick="document.getElementById('octave-value').value = parseInt(document.getElementById('octave-value').value) - 1;">
+            –
+          </button>
+                <input id="octave-value" type="number" value="0" min="-5" step="1" style="width:26px;text-align:center" />
+                <button onclick="document.getElementById('octave-value').value = parseInt(document.getElementById('octave-value').value) + 1;">
+            +
+          </button>
+            </div>
+        </div>
+        <div class="instruments">
+            <div class="keyboard">
+                <div class="white key" data-key-number="0" data-key-bind="a">f</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="1" data-key-bind="w">
+                        f#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="2" data-key-bind="s">g</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="3" data-key-bind="e">
+                        g#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="4" data-key-bind="d">a</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="5" data-key-bind="r">
+                        a#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="6" data-key-bind="f">b</div>
+                <div class="white key" data-key-number="7" data-key-bind="g">c</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="8" data-key-bind="y">
+                        c#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="9" data-key-bind="h">d</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="10" data-key-bind="u">
+                        d#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="11" data-key-bind="j">e</div>
+                <div class="white key" data-key-number="12" data-key-bind="k">f</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="13" data-key-bind="o">
+                        f#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="14" data-key-bind="l">g</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="15" data-key-bind="p">
+                        g#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="16" data-key-bind=";">a</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="17" data-key-bind="[">
+                        a#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="18" data-key-bind="'">b</div>
+                <div class="white key" data-key-number="19" data-key-bind="v">c</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="20" data-key-bind="b">
+                        c#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="21" data-key-bind="n">d</div>
+                <div class="blackKeyContainer">
+                    <div class="black key" data-key-number="22" data-key-bind="m">
+                        d#
+                    </div>
+                </div>
+                <div class="white key" data-key-number="23" data-key-bind="q">e</div>
+            </div>
+            <div class="module">
+                <h3>Tone Generator</h3>
+                <hr />
+                <div class="generator-tone" style="display: flex;align-items: center;justify-content: center;padding: 4px 10px;">
+                    <button>–</button>
+                    <input type="time" value="440" style="max-width: 45px;display: flex;text-align: center;background-color: #222;color: rgba(255,255,255,.95);0%;" />
+                    <button>+</button>
+                </div>
+                <hr />
+                <div class="on-off-radio" style="text-align:center;padding:3px 10px;">
+
+                    <input type="radio" name="onoff" value="off" checked /> off / on <input type="radio" name="onoff" value="on">
+                </div>
+                <hr />
+                <div class="connections">
+                    <div class="output">
+                        <label for="outputs5">output to</label>
+                        <select id="tone-gen-output" name="outputs5">
+              <option value="osc">osc 1</option>
+              <option value="osc2">osc 2</option>
+              <option value="adsr" selected="">adsr</option>
+              <option value="delay">delay</option>
+              <option value="masterVol">master vol</option>
+              <option value="destination">destination</option>
+            </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-area">
+            <div class="setting-pane">
+                <form class="select-wave">
+                    <h3>OSC 1</h3>
+                    <hr />
+                    <div class="level-slide">
+                        <label class="level-label" for="osc1-level">level</label>
+                        <input id="osc1-level" name="osc1-level" type="range" min="0" max="100" value="50" />
+                        <small id="osc1-level-display" class="osc1-lavel-label"></small>
+                    </div>
+                    <hr />
+                    <div class="wave-form-picker">
+                        <label>WAVEFORM</label>
+                        <div class="select-items">
+                            <span class="select-item">
+                <input type="radio" name="waveTypeOsc1" value="sine" /> Sine
+              </span>
+                            <span class="select-item">
+                <input type="radio" name="waveTypeOsc1" value="square" /> Square
+              </span>
+                            <span class="select-item">
+                <input
+                  type="radio"
+                  name="waveTypeOsc1"
+                  value="sawtooth"
+                  checked
+                />
+                Sawtooth
+              </span>
+                            <span class="select-item">
+                <input type="radio" name="waveTypeOsc1" value="triangle" />
+                Triangle
+              </span>
+                        </div>
+                    </div>
+                </form>
+                <hr />
+                <div class="connections">
+                    <!-- <div class="input">
+            <label for="inputs1">input</label>
+            <select id="osc-1-input" name="inputs1">
+              <option>keyboard</option>
+              <option></option>
+              <option></option>
+            </select>
+          </div> -->
+                    <div class="output">
+                        <label for="outputs1">output to</label>
+                        <select id="osc-1-output" name="outputs1">
+              <option value="osc">osc 1</option>
+              <option value="osc2">osc 2</option>
+              <option value="adsr" selected>adsr</option>
+              <option value="delay">delay</option>
+              <option value="masterVol">master vol</option>
+              <option value="destination">destination</option>
+            </select>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-pane">
+                <form class="select-wave">
+                    <h3>OSC 2</h3>
+                    <hr />
+                    <div class="level-slide">
+                        <label class="level-label" for="osc2-level">level</label>
+                        <input id="osc2-level" name="osc2-level" type="range" min="0" max="100" value="50" />
+                        <small id="osc2-level-display" class="osc2-lavel-label"></small>
+                    </div>
+                    <hr />
+                    <div class="wave-form-picker">
+                        <label>WAVEFORM</label>
+                        <div class="select-items">
+                            <span class="select-item">
+                <input type="radio" name="waveTypeOsc2" value="sine" /> Sine
+              </span>
+                            <span class="select-item">
+                <input type="radio" name="waveTypeOsc2" value="square" /> Square
+              </span>
+                            <span class="select-item">
+                <input type="radio" name="waveTypeOsc2" value="sawtooth" />
+                Sawtooth
+              </span>
+                            <span class="select-item">
+                <input
+                  type="radio"
+                  name="waveTypeOsc2"
+                  value="triangle"
+                  checked
+                />
+                Triangle
+              </span>
+                        </div>
+                    </div>
+                </form>
+                <hr />
+                <div class="connections">
+                    <!-- <div class="input">
+            <label for="inputs2">input</label>
+            <select name="inputs2">
+              <option>keyboard</option>
+              <option></option>
+              <option></option>
+            </select>
+          </div> -->
+                    <div class="output">
+                        <label for="outputs2">output to</label>
+                        <select id="osc-2-output" name="outputs2">
+              <option value="osc">osc 1</option>
+              <option value="osc2">osc 2</option>
+              <option value="adsr" selected>adsr</option>
+              <option value="delay">delay</option>
+              <option value="masterVol">master vol</option>
+              <option value="destination">destination</option>
+            </select>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-pane envelope">
+                <h3>ADSR</h3>
+                <hr />
+                <canvas id="envelopeVisualization" width="144" height="60"></canvas>
+                <hr />
+                <div class="select-items">
+                    <span class="select-item">
+            <label>attack</label>
+            <input
+              id="attack-input"
+              type="number"
+              value="0.4"
+              step=".1"
+              min="0"
+            />
+          </span>
+                    <span class="select-item">
+            <label>decay</label>
+            <input
+              id="decay-input"
+              type="number"
+              value=".3"
+              step=".1"
+              min="0"
+            />
+          </span>
+                    <span class="select-item">
+            <label>sustain</label>
+            <input
+              id="sustain-input"
+              type="number"
+              value="80"
+              max="100"
+              min="0"
+            />
+          </span>
+                    <span class="select-item">
+            <label>release</label>
+            <input
+              id="release-input"
+              type="number"
+              value="0.4"
+              step=".1"
+              min="0"
+            />
+          </span>
+                </div>
+                <hr />
+                <!-- <div class="input">
+          <label for="inputs2">input</label>
+          <select name="inputs2">
+            <option>(multiple)</option>
+            <option></option>
+            <option></option>
+          </select>
+        </div> -->
+                <div class="output">
+                    <label for="outputs3">output to</label>
+                    <select id="adsr-output" name="outputs3">
+            <option value="osc">osc 1</option>
+            <option value="osc2">osc 2</option>
+            <option value="adsr">adsr</option>
+            <option value="delay">delay</option>
+            <option value="masterVol" selected>master vol</option>
+            <option value="destination">destination</option>
+          </select>
+                </div>
+            </div>
+            <div class="setting-pane" style="display: none;">
+                <h3>Delay</h3>
+                <hr />
+                <span class="select-item">
+          <label>seconds</label>
+          <input id="delay-input" type="number" value="5" step=".1" min="0" />
+        </span>
+                <hr />
+                <div class="output">
+                    <label for="outputs5">output to</label>
+                    <select id="delay-output" name="outputs5">
+            <option value="osc">osc 1</option>
+            <option value="osc2">osc 2</option>
+            <option value="adsr">adsr</option>
+            <option value="delay">delay</option>
+            <option value="masterVol" selected>master vol</option>
+            <option value="destination">destination</option>
+          </select>
+                </div>
+            </div>
+            <div class="setting-pane">
+                <h3>Master Vol</h3>
+                <hr />
+                <div class="level-slide volume">
+                    <label class="volume-lavel-label" for="volume-level">VOL</label>
+                    <input id="volumeLevel" name="volume-level" type="range" min="0" max="100" value="60" />
+                    <small id="volumeDisplay" class="volume-lavel-label"></small>
+                </div>
+                <hr />
+                <!-- <div class="input">
+          <label for="inputs2">input</label>
+          <select name="inputs2">
+            <option>envelope</option>
+            <option></option>
+            <option></option>
+          </select>
+        </div> -->
+                <div class="output">
+
+                    <label for="outputs4">output to</label>
+                    <form id="outputs4">
+                        <select id="master-vol-output" name="outputs4">
+            <option value="osc">osc 1</option>
+            <option value="osc2">osc 2</option>
+            <option value="adsr">adsr</option>
+            <option value="delay">delay</option>
+            <option value="masterVol">master vol</option>
+            <option value="destination" selected>destination</option>
+          </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    function fixFloat(floatInput) {
+        let newFloat = parseFloat(floatInput);
+        newFloat = Math.round(newFloat * 100) / 100;
+        return newFloat;
+    }
+
+    window.addEventListener("load", init, false);
+
+    function init() {
+        try {
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+        } catch (e) {
+            alert("Web Audio API is not supported in this browser");
+        }
+    }
+
+    const onSwitch = document.getElementById("on");
+    const onLight = document.getElementById("onLight");
+
+    // onSwitch.onclick = function() {
+    onLight.classList.toggle("on");
+    var context = new(window.AudioContext || window.webkitAudioContext)(),
+        oscillators = {},
+        oscillators2 = {},
+        attackTime = 1,
+        releaseTime = 1,
+        amplifiers = {},
+        adsrFilterList = {},
+        masterGainNode = null,
+        pressed = false,
+        keyDebounceListAllowed = {};
+
+    function createOsc(frequency) {
+        // check octave
+        var octaveShift = getTimeValue("octave-value");
+
+        //oscillator 1
+        var osc = context.createOscillator();
+        osc.type = getWaveTypeOsc1();
+        osc.frequency.value = frequency;
+        osc.detune.value = octaveShift * 1200;
+        osc.start(0);
+
+        //oscillator 2
+        var osc2 = context.createOscillator();
+        osc2.type = getwaveTypeOsc2();
+        osc2.frequency.value = frequency;
+        osc2.detune.value = octaveShift * 1200;
+        osc2.start(0);
+
+        // osc 1 amp
+        var ampOsc1 = context.createGain();
+        ampOsc1.gain.value = returnHundredthOfLevelById("osc1-level");
+
+        // osc 2 amp
+        var ampOsc2 = context.createGain();
+        ampOsc2.gain.value = returnHundredthOfLevelById("osc2-level");
+
+        // setup ADSR filter
+        var adsr = context.createGain();
+
+        // create delay
+        var delay = context.createDelay();
+        var delayTime = getTimeValue("delay-input");
+        delay.delayTime = delayTime;
+
+        // master vol level
+        var masterVol = context.createGain();
+        masterVol.gain.value = returnHundredthOfLevelById("volumeLevel");
+
+        // SETUP ADS of ADSR envelope filter (release lives )
+        var attackTime = getTimeValue("attack-input");
+        var decayTime = getTimeValue("decay-input");
+        var sustainLevel = getSustainLevel();
+        now = context.currentTime;
+        adsr.gain.setValueAtTime(0, now);
+
+        // if(delayTime > 0){
+        //   console.log('yes');
+        //   adsr.gain.exponentialRampToValueAtTime(0, now + delayTime);
+        //   adsr.gain.exponentialRampToValueAtTime(1, now + delayTime + attackTime);
+        //   adsr.gain.exponentialRampToValueAtTime(sustainLevel, now + delayTime + attackTime + decayTime);
+        //   adsr.gain.exponentialRampToValueAtTime(sustainLevel, now + delayTime + attackTime + decayTime);
+        // }
+        //attack
+        adsr.gain.exponentialRampToValueAtTime(1, now + attackTime);
+
+        //sustain
+        adsr.gain.exponentialRampToValueAtTime(
+            sustainLevel,
+            now + attackTime + decayTime
+        );
+
+        //track in array
+        oscillators[frequency] = osc;
+        oscillators2[frequency] = osc2;
+        adsrFilterList[frequency] = adsr;
+        amplifiers[frequency] = masterVol;
+
+        if (getConnection("osc-1-output") == "osc") {
+            console.log("u");
+        }
+
+        function getConnection(elementId) {
+            var selectedValue = document.getElementById(elementId).value;
+            if (selectedValue == "osc") {
+                return osc;
+            } else if (selectedValue == "osc2") {
+                return osc2;
+            } else if (selectedValue == "adsr") {
+                return adsr;
+            } else if (selectedValue == "masterVol") {
+                return masterVol;
+            } else if (selectedValue == "destination") {
+                return context.destination;
+            } else if (selectedValue == "delay") {
+                return delay;
+            }
+        }
+
+        //connections
+        osc.connect(ampOsc1);
+        osc2.connect(ampOsc2);
+        ampOsc1.connect(getConnection("osc-1-output"));
+        ampOsc2.connect(getConnection("osc-2-output"));
+        delay.connect(getConnection("delay-output"));
+        adsr.connect(getConnection("adsr-output"));
+        masterVol.connect(getConnection("master-vol-output"));
+
+        //
+        // //connections
+        // osc.connect(ampOsc1);
+        // osc2.connect(ampOsc2);
+        // ampOsc1.connect(adsr);
+        // ampOsc2.connect(adsr);
+        // adsr.connect(masterVol);
+        // masterVol.connect(context.destination);
+        //
+    }
+
+    function keyToFrequency(key) {
+        var keyID = key.getAttribute("data-key-number");
+        var distanceFrom440 = keyID - 16;
+        let frequency = 440 * Math.pow(1.0594631, distanceFrom440);
+        frequency = fixFloat(frequency);
+        return frequency;
+    }
+
+    function keyPress(key) {
+        lightUp(key);
+        /* Calculate key's offset from A440  to get the desired frequency */
+        let noteFrequency = keyToFrequency(key);
+        createOsc(noteFrequency);
+    }
+
+    function cancelOsc(key) {
+        lightOut(key);
+        var frequency = keyToFrequency(key);
+
+        var attackTime = getTimeValue("attack-input");
+        var decayTime = getTimeValue("decay-input");
+        var releaseTime = getTimeValue("decay-input");
+
+        // ramp down to 0 to avoid click noise from ending wave abruptly 
+        amplifiers[frequency].gain.exponentialRampToValueAtTime(
+            0.0005, 
+            context.currentTime + releaseTime
+        );
+    }
+
+    /* UTILITIES */
+
+    /* Find volume slider */
+    const volumeSlider = document.getElementById("volumeLevel");
+    /* Find volume slider number display */
+    const volumeDisplay = document.getElementById("volumeDisplay");
+    /* Find volume slider display to current/default val */
+    volumeDisplay.textContent = volumeSlider.value;
+    /* Update vol and display value when slider is changed */
+    volumeSlider.addEventListener("change", function() {
+        document.getElementById("volumeDisplay").textContent = volumeSlider.value;
+    });
+
+    const osc1Slider = document.getElementById("osc1-level");
+    const osc1Display = document.getElementById("osc1-level-display");
+    osc1Display.textContent = osc1Slider.value;
+    /* Update vol and display value when slider is changed */
+    osc1Slider.addEventListener("change", function() {
+        document.getElementById("osc1-level-display").textContent =
+            osc1Slider.value;
+    });
+
+    const osc2Slider = document.getElementById("osc2-level");
+    const osc2Display = document.getElementById("osc2-level-display");
+    osc2Display.textContent = osc2Slider.value;
+    /* Update vol and display value when slider is changed */
+    osc2Slider.addEventListener("change", function() {
+        document.getElementById("osc2-level-display").textContent =
+            osc2Slider.value;
+    });
+
+    // Used for grabbing a 0–100 slider and returning value as a percentage of 1.
+    function returnHundredthOfLevelById(target) {
+        let val = document.getElementById(target).value;
+        val = fixFloat(val);
+        return val / 100;
+    }
+
+    function getWaveTypeOsc1() {
+        var selectedWave = document.querySelector(
+            'input[name="waveTypeOsc1"]:checked'
+        );
+        return selectedWave.value;
+    }
+
+    function getwaveTypeOsc2() {
+        var selectedWave = document.querySelector(
+            'input[name="waveTypeOsc2"]:checked'
+        );
+        return selectedWave.value;
+    }
+
+    function lightUp(key) {
+        key.style.backgroundColor = "DodgerBlue";
+    }
+
+    function lightOut(key) {
+        key.style.transition = "background-color .2s ease";
+        key.style.backgroundColor = "inherit";
+    }
+
+    /* BIND KEYS TO CLICKS */
+    const keyElements = document.querySelectorAll(".key");
+    /* For each element drawn as a key, bind a keypress() function to both click and computer keyboard press */
+    Array.prototype.forEach.call(keyElements, function(key, i) {
+        key.onmousedown = function() {
+            pressed = true;
+            keyPress(key);
+        };
+        key.onmouseenter = function() {
+            if (pressed == true) {
+                keyPress(key);
+            }
+        };
+        key.onmouseup = function(_, _) {
+            pressed = false;
+            cancelOsc(key);
+        };
+        key.onmouseout = function() {
+            if (pressed == true) {
+                cancelOsc(key);
+            }
+        };
+
+        /* BIND KEYS TO KEYBOARD KEYS */
+        let associatedKeyboardKey = keyElements[i].dataset.keyBind;
+
+        document.addEventListener("keydown", function(event) {
+            if (
+                event.key === associatedKeyboardKey &&
+                keyDebounceListAllowed[event.key] != false
+            ) {
+                keyPress(key);
+                keyDebounceListAllowed[event.key] = false;
+            }
+        });
+
+        document.addEventListener("keyup", function(event) {
+            if (event.key === associatedKeyboardKey) {
+                cancelOsc(key);
+                keyDebounceListAllowed[event.key] = true;
+            }
+        });
+    });
+
+    /* ENVELOPE DISPLAY */
+
+    const envelopeInputs = document.querySelectorAll("input");
+    envelopeInputs.forEach(element =>
+        element.addEventListener("change", function() {
+            drawEnvelope();
+        })
+    );
+
+    // set up envelope drawing
+
+    var canvas = document.getElementById("envelopeVisualization"),
+        ctx = canvas.getContext("2d"),
+        canvasWidth = canvas.clientWidth,
+        canvasHeight = canvas.clientHeight,
+        attack,
+        decay,
+        sustain,
+        calculatedAttack,
+        calculatedDecay,
+        calculatedSustain,
+        sustainLength,
+        setTimes,
+        timeWithSustain,
+        timeBlock,
+        release;
+
+    function getTimeValue(id) {
+        var value = document.getElementById(id).value;
+        return parseFloat(value);
+    }
+
+    function getSustainLevel() {
+        var value = document.getElementById("sustain-input").value;
+        value = value / 100;
+        return value;
+    }
+
+    function getConvertedSustainLevel() {
+        value = getSustainLevel();
+        value = value * canvasHeight;
+        return canvasHeight - parseFloat(value);
+    }
+
+    drawEnvelope();
+
+    function drawEnvelope() {
+        attack = getTimeValue("attack-input");
+        decay = getTimeValue("decay-input");
+        release = getTimeValue("release-input");
+
+        setTimes = attack + decay + release;
+        averageTime = setTimes / 3;
+        timeWithSustainAdded = setTimes + averageTime;
+
+        timeBlock = canvasWidth / timeWithSustainAdded;
+
+        attack = attack * timeBlock;
+        decay = decay * timeBlock;
+        sustain = averageTime * timeBlock;
+        release = release * timeBlock;
+
+        ctx.fillStyle = "#eee";
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#333";
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+
+        // draw attack
+        ctx.moveTo(0, canvasHeight); // start in bottom left corner
+        ctx.lineTo(attack, 0);
+        ctx.stroke();
+
+        // draw decay
+        ctx.lineTo(attack + decay, getConvertedSustainLevel());
+        ctx.stroke();
+
+        // draw sustain
+        ctx.lineTo(attack + decay + sustain, getConvertedSustainLevel());
+        ctx.stroke();
+
+        // draw release
+        ctx.lineTo(canvasWidth, canvasHeight);
+        ctx.stroke();
+    }
+
+    // };
+</script>
+
+</html>

@@ -473,15 +473,18 @@
       
       var gridArray = [];
 
-      function calculatePXON(){
+      function getCurrentPixels(){
+        // get all current pixel elements (.dot class <div> items) and put them in an array
         var dots = document.querySelectorAll("#grid-container .dot");
         var currentBoard = [];
         dots.forEach(dot => 
           currentBoard.push(dot)
         );
         
+        // slice that array at each row of pixels, calculated from board size.
+        // each element in gridArray will be an array containing a row worth of
+        // pixel elements. 
         for(i = 0; i < BOARD_SIZE; i++){
-          // console.log(oldNum);
           if(i < 1){
             gridArray[i] = currentBoard.slice(0, BOARD_SIZE);
           }else{
@@ -489,21 +492,21 @@
             var newVal = (i + 1) * BOARD_SIZE;
             gridArray[i] = currentBoard.slice(oldVal, newVal);
           }
-
-          
+   
         }
         return gridArray;
       }
       
+      // Export PXON
       var createPXON = function(){
-        var gridArray = calculatePXON();
+        var gridArray = getCurrentPixels();
         pxon = {
           exif: {
             software: 'https://pxonloop.glitch.me',
             artist: "jenn schiffer",
             imageDescription: "smile",
             userComment: "an example pixel drawing to show off pxon",
-            copyright: "jenn schiffer 2018",
+            copyright: "ryan whitney 2020",
             dateTime: "2015-09-17T15:21:51.761Z"
           },
           pxif: {
@@ -527,6 +530,18 @@
           ]
           }
         };
+        function getpixelColor(pxArray){
+          if(pxArray[x][y] != undefined){
+            return pxArray[x][y].getPropertyValue('--dotColor')
+          }
+          else{
+            return "#1f1f1f"
+          }
+        }
+        // From getCurrentPixels() we have an array element that contains arrays of each row of pixels. This lets us grab XY coordinates. 
+        
+        
+        
         var n = 0;
         for(x = 0; x < BOARD_SIZE; x++){
           for(y = 0; y < BOARD_SIZE; y++){
@@ -534,13 +549,10 @@
               var pixel = new Object();  
               pixel.x = x;
               pixel.y = y;
-              pixel.color = gridArray[x][y].getPropertyValue('--dotColor');
+              pixel.color = getpixelColor(gridArray);
               pxon.pxif.pixels[n] = pixel;
               
-                           
-
-
-              console.log(gridArray[x][y].style.backgroundColor);
+              console.log(pixel.color);
               n++;
           }
         }
