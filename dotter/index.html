@@ -17,13 +17,18 @@
         Monaco, Consolas,"Liberation Mono","Courier New", monospace;
       text-transform: lowercase;
     }
-    pre{
-      max-width: 100%;
+    #raw{
+      /* max-width: 100%; */
       line-break: normal;
       height: 100px;
       white-space: pre-line;
       overflow: hidden;
       overflow-y: scroll;
+      float: right;
+      width: 40%;
+      height: 100vh;
+      display: none;
+      z-index: 1;
     }
     label{
       text-shadow: -1px 1px 0 rgba(0,0,0,.2),
@@ -138,6 +143,8 @@
         <input type="color" id="background-color-selected" name="select-background-color"
            value="#19181A">
       </div>
+    </div>
+    <div class="tools">
       <div id="select-dot-radius-amount" style="width:80px;">
         <label for="select-dot-radius-amount">dot radius</label>
         <input type="number" id="dot-radius-amount" name="select-dot-radius-amount"
@@ -159,8 +166,11 @@
     </div>
     <div id="more-tools">
       <div class="check">
-        <label for="enable-undo-visualizer">Enable undo visualizer</label>
+        <input type="checkbox" id="enable-pxon-viewer" name="enable-pxon-viewer">
+        <label for="enable-pxon-viewer">PXON viewer</label>
+        <br/>
         <input type="checkbox" id="enable-undo-visualizer" name="enable-undo-visualizer">
+        <label for="enable-undo-visualizer">undo visualizer</label>
       </div>
       <div id="undo-tile-scale">
         <label for="select-undo-tile-scale">&nbsp;&nbsp; scale</label>
@@ -207,6 +217,7 @@
       bgColorSelect = document.getElementById("background-color-selected"),
       dotRadiusSelect = document.getElementById("dot-radius-amount"),
       glowAmountSelect = document.getElementById("glow-amount"),
+      pxonViewerCheckbox = document.querySelector("input[name=enable-pxon-viewer]"),
       undoVisualizerCheckbox = document.querySelector("input[name=enable-undo-visualizer]"),
       undoTileScaleContainer = document.getElementById("undo-tile-scale"),
       undoTileScale = document.getElementById("select-undo-tile-scale"),
@@ -245,27 +256,43 @@
         );
       }, false); 
       
-      // Bind & handle changes on UNDO VISUALIZER CHECKBOX
-      undoVisualizerCheckbox.addEventListener( 'change', function() {
-        if(this.checked) {
-            UNDO_VISUALIZER = true;
-            var undoVisualizer = document.createElement("div");
-            undoVisualizer.id = "undo-history";
-            gridContainer.after(undoVisualizer);
-            undoVisualizer.innerHTML = "";
-            undoStack.forEach(element =>
-              undoVisualizer.innerHTML += element
-            );
-            undoTileScaleContainer.style.display = "block";
-            undoTileGapContainer.style.display = "block";
-        } else {
-          UNDO_VISUALIZER = false;
-          var undoVisualizer = document.getElementById('undo-history');
-          undoVisualizer.remove();
-          undoTileScaleContainer.style.display = "none";
-          undoTileGapContainer.style.display = "none";
+      // Bind & handle changes on PXON VIEWER CHECKBOX
+      pxonViewerCheckbox.addEventListener( 
+        'change',
+        function() {
+          if(this.checked) {
+            document.getElementById("raw").style.display = "block"
+          } else {
+            document.getElementById("raw").style.display = "none"
+          }
+          bindClicksForCurrentBoard();
         }
-      });
+      );
+      
+      // Bind & handle changes on UNDO VISUALIZER CHECKBOX
+      undoVisualizerCheckbox.addEventListener( 
+        'change', 
+        function() {
+          if(this.checked) {
+              UNDO_VISUALIZER = true;
+              var undoVisualizer = document.createElement("div");
+              undoVisualizer.id = "undo-history";
+              gridContainer.after(undoVisualizer);
+              undoVisualizer.innerHTML = "";
+              undoStack.forEach(element =>
+                undoVisualizer.innerHTML += element
+              );
+              undoTileScaleContainer.style.display = "block";
+              undoTileGapContainer.style.display = "block";
+          } else {
+            UNDO_VISUALIZER = false;
+            var undoVisualizer = document.getElementById('undo-history');
+            undoVisualizer.remove();
+            undoTileScaleContainer.style.display = "none";
+            undoTileGapContainer.style.display = "none";
+          }
+        }
+      );
       
       // Bind  to changes on UNDO VISUALIZER SCALE
       undoTileScale.addEventListener("input", function() {
