@@ -219,7 +219,7 @@
       <div id="select-glow-amount" style="width:60px;">
         <label for="select-glow-amount">glow</label>
         <input type="number" id="glow-amount" name="select-glow-amount"
-           value="3" style="width:40px;">
+           value="0" style="width:40px;">
       </div>
       <div class="undo">
         <button id="undo-button" disabled>undo</button>
@@ -232,14 +232,18 @@
     </div>
     <div id="more-tools">
       <div class="check">
-        <input type="checkbox" id="hide" name="hide">
+        <input type="checkbox" id="hide-checkbox" name="hide">
         <label for="hide">hide</label>
       </div>
-      <div class="check">
+      <div class="check experiment">
+        <input type="checkbox" id="code-editor-checkbox" name="code-editor" checked>
+        <label for="code-editor">draw with words</label>
+      </div>
+      <div class="check experiment">
         <input type="checkbox" id="enable-pxon-viewer" name="enable-pxon-viewer">
         <label for="enable-pxon-viewer">PXON viewer</label>
       </div>
-      <div id="undo-visualizer" class="check">
+      <div id="undo-visualizer" class="check experiment">
         <input type="checkbox" id="enable-undo-visualizer" name="enable-undo-visualizer">
         <label for="enable-undo-visualizer">undo stack visualizer</label>
         <div id="undo-tile-scale">
@@ -256,11 +260,10 @@
     <div id="c0de">
       <label for="code-editor">draw with words</label>
         <p>⚠️ heads up this is just javascript</p>
-        <p>but there are some special functions available like <span class="code">paint(x,y);</span></p>
+        <p>but there are some special functions available like <span class="code">paint(x,y);</span> with coordinates</p>
         <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
-          <span class="comment">// heads up this is just javascript. ayy</span>
+          <span class="comment">// try writing paint(0,5);</span>
           <br/>
-          <span class="comment">// but you can try <span "class="command">paint(x,y);</span></span><br/>
         <div></div>
       </code>
       <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
@@ -297,7 +300,9 @@ var inputInitialDotColor = document.getElementById("initial-dot-color-selected")
   inputDotRadius = document.getElementById("dot-radius-amount"),
   inputGridGapSize = document.getElementById("grid-gap-size"),
   inputGlowRadius = document.getElementById("glow-amount"),
+  inputHideCheckbox = document.getElementById("hide-checkbox"),
   inputPxonViewerCheckbox = document.querySelector("input[name=enable-pxon-viewer]"),
+  inputCodeEditorCheckbox = document.getElementById("code-editor-checkbox")
   inputUndoVisualizerCheckbox = document.querySelector("input[name=enable-undo-visualizer]"),
   inputUndoVisualizerScaleContainer = document.getElementById("undo-tile-scale"),
   inputUndoVisualizerScale = document.getElementById("select-undo-tile-scale"),
@@ -321,7 +326,9 @@ var initialDotColor,
   dotRadius,
   gridGapSize,
   glowRadius,
+  hideCheckbox,
   pxonViewerCheckbox,
+  codeEditorCheckbox,
   undoVisualizerCheckbox,
   undoVisualizerScale,
   undoVisualizerGap;
@@ -333,8 +340,10 @@ function getState(){
   dotSize = inputDotSize.value;
   dotRadius = inputDotRadius.value;
   gridGapSize = inputGridGapSize.value;
+  hideCheckbox = inputHideCheckbox.checked;
   glowRadius = inputGlowRadius.value;
   pxonViewerCheckbox = inputPxonViewerCheckbox.checked;
+  codeEditorCheckbox = inputCodeEditorCheckbox.checked;
   undoVisualizerCheckbox = inputUndoVisualizerCheckbox.checked;
   undoVisualizerScale = inputUndoVisualizerScale.value;
   undoVisualizerGap = inputUndoVisualizerGap.value;
@@ -342,17 +351,19 @@ function getState(){
 
 function loadState(){
   if (typeof(Storage) !== "undefined") {
-    localStorage.getItem("initialDotColor");
-    localStorage.getItem("newDrawColor");
-    localStorage.getItem("backgroundColor");
-    localStorage.getItem("dotSize");
-    localStorage.getItem("dotRadius");
-    localStorage.getItem("gridGapSize");
-    localStorage.getItem("glowRadius");
-    localStorage.getItem("pxonViewerCheckbox");
-    localStorage.getItem("undoVisualizerCheckbox");
-    localStorage.getItem("undoVisualizerScale");
-    localStorage.getItem("undoVisualizerGap");
+    initialDotColor = localStorage.getItem("initialDotColor");
+    newDrawColor = localStorage.getItem("newDrawColor");
+    backgroundColor = localStorage.getItem("backgroundColor");
+    dotSize = localStorage.getItem("dotSize");
+    dotRadius = localStorage.getItem("dotRadius");
+    gridGapSize = localStorage.getItem("gridGapSize");
+    glowRadius = localStorage.getItem("glowRadius");
+    hideCheckbox = localStorage.getItem("hideCheckbox");
+    codeEditorCheckbox = localStorage.getItem("codeEditorCheckbox");
+    pxonViewerCheckbox = localStorage.getItem("pxonViewerCheckbox");
+    undoVisualizerCheckbox = localStorage.getItem("undoVisualizerCheckbox");
+    undoVisualizerScale = localStorage.getItem("undoVisualizerScale");
+    undoVisualizerGap = localStorage.getItem("undoVisualizerGap");
   } else {
     // no localstorage..
   }
@@ -372,11 +383,12 @@ function saveState(){
     localStorage.setItem("dotRadius", dotRadius);
     localStorage.setItem("gridGapSize", gridGapSize);
     localStorage.setItem("glowRadius", glowRadius);
+    localStorage.setItem("hideCheckbox", hideCheckbox);
+    localStorage.setItem("codeEditorCheckbox", codeEditorCheckbox);
     localStorage.setItem("pxonViewerCheckbox", pxonViewerCheckbox);
     localStorage.setItem("undoVisualizerCheckbox", undoVisualizerCheckbox);
     localStorage.setItem("undoVisualizerScale", undoVisualizerScale);
     localStorage.setItem("undoVisualizerGap", undoVisualizerGap);  
-    console.log("saved initalDotColor:" + initialDotColor + "and newDrawColor:" + newDrawColor + "and backgroundColor:" + backgroundColor + " to local storage");
   } else {
     // no localstorage..
   }
@@ -428,13 +440,26 @@ inputBackgroundColor.addEventListener("input", function() {
 
 // Bind to input changes on DOT RADIUS
 inputDotRadius.addEventListener("input", function() {
+  updateDotRadius(inputDotRadius.value);
+}, false); 
+
+function updateDotRadius(amount){
+  if(!amount){
+    amount = 3;
+  }
   const style = document.createElement('style');
   style.innerHTML = `
     .dot {
         border-radius:` + inputDotRadius.value + `px;
     }`;     
   document.head.appendChild(style);
-}, false); 
+  // update variable
+  dotRadius = amount;
+  // update input value
+  inputDotRadius.value = amount;
+  // save state
+  saveState();
+}
 
 // Bind to input changes on DOT SIZE
 inputDotSize.addEventListener("input", function() {
@@ -443,6 +468,9 @@ inputDotSize.addEventListener("input", function() {
 
 // Handle changes to DOT SIZE
 function updateDotScale(sizeInPx){
+  if(!sizeInPx){
+    sizeInPx = 20;
+  }
   var n = sizeInPx + "px"; 
   const style = document.createElement('style');
   style.innerHTML = `
@@ -451,14 +479,23 @@ function updateDotScale(sizeInPx){
       grid-template-columns:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
     } `;   
   document.head.appendChild(style);
+  // update variable
+  dotSize = sizeInPx;
+  // update input value
+  inputDotSize.value = sizeInPx;
+  // save state
+  saveState();
 }
 
 // Bind to input changes on GRID GAP 
 inputGridGapSize.addEventListener("input", function() {
-  updateGridGapSize(inputDotSize.value);
+  updateGridGapSize(inputGridGapSize.value);
 }, false);
 
 function updateGridGapSize(sizeInPx){
+  if(!sizeInPx){
+    sizeInPx = 3;
+  }
   const style = document.createElement('style');
   if (sizeInPx > 0){
     style.innerHTML = `
@@ -473,10 +510,16 @@ function updateGridGapSize(sizeInPx){
   }
   document.head.appendChild(style);
   // scale must be changed to recalculate grid-gap, or something. it seems to require this.
-  updateDotScale(sizeInPx - 1);
+  updateDotScale(dotSize - 1);
   setTimeout(function(){ 
-    updateDotScale(sizeInPx); 
+    updateDotScale(dotSize + 1); 
   }, 15);
+  // update variable
+  gridGapSize = amount;
+  // update input value
+  inputGridGapSize.value = amount;
+  // save state
+  saveState();
 }
 
 // Bind and handle input changes on GLOW AMOUNT
@@ -486,11 +529,20 @@ inputGlowRadius.addEventListener("input", function() {
 
 // Handle changes to GLOW AMOUNT
 function updateGlowRadius(amount){
+  if(!amount){
+    amount = 3;
+  }
   var dots = document.querySelectorAll(".dot");
   dots.forEach(item => 
     item.style.cssText += `box-shadow: 0 0 ` + amount + `px  var(--dotColor),
          0 0 ` + amount + `px  var(--dotColor);`
   );
+  // update variable
+  glowRadius = amount;
+  // update input value
+  inputGlowRadius.value = amount;
+  // save state
+  saveState();
 }
 
 
@@ -504,6 +556,38 @@ inputPxonViewerCheckbox.addEventListener(
       document.getElementById("raw").style.display = "none"
     }
     bindClicksForCurrentBoard();
+  }
+);
+
+// Bind & handle changes on PXON VIEWER CHECKBOX
+inputHideCheckbox.addEventListener( 
+  'change',
+  function() {
+    var otherCheckBoxes = document.querySelectorAll("#more-tools .experiment");
+    if(this.checked) {
+      otherCheckBoxes.forEach(element =>
+        element.style.display = "none"
+      );
+    } else {
+      otherCheckBoxes.forEach(element =>
+        element.style.display = "block"
+      );
+    }
+      
+      
+  }
+);
+
+// Bind & handle changes on PXON VIEWER CHECKBOX
+inputCodeEditorCheckbox.addEventListener( 
+  'change',
+  function() {
+      codeEditor = document.getElementById("c0de");
+    if(this.checked) {
+      codeEditor.style.display = "block"
+    } else {
+      codeEditor.style.display = "none"
+    }
   }
 );
 
@@ -653,13 +737,13 @@ function updateBackgroundColor(color){
       
 //////// START UP   
 function startup() {
-  // getState();
-  initialDotColor = localStorage.getItem("initialDotColor");
-  backgroundColor = localStorage.getItem("backgroundColor");
-  newDrawColor = localStorage.getItem("newDrawColor");
+  loadState();
   updateInitialDotColor(initialDotColor);
   updateBackgroundColor(backgroundColor);
-  updateNewDrawColor(newDrawColor)
+  updateNewDrawColor(newDrawColor);
+  updateDotScale(dotSize);
+  updateDotRadius(dotRadius);
+  updateGlowRadius(glowRadius);
 
   // CREATE BOARD
   gridContainer = document.getElementById('grid-container');
