@@ -97,7 +97,7 @@
       margin-top: 50px;
     }
     #pxon-panel a{
-      color: white;
+      color: var(--currentNewDrawColor);
       font-style: italic;
       position: relative;
       transition: all .2s ease;
@@ -1325,7 +1325,16 @@ function createPXON(){
       
       
       
-      
+function coordinateWithinBounds(coordinate){
+  if(!coordinate.isNaN){
+    if(0 <= coordinate && coordinate < BOARD_SIZE){
+      return coordinate;
+    }
+  }
+  console.log("received coordinate at " + coordinate + ". out of bounds, setting to 0.")
+  return 0;
+}
+
 /////// API 
       
 function paint(x,y,color){
@@ -1335,6 +1344,8 @@ function paint(x,y,color){
     if(!color){
       color = newDrawColor;
     }
+    x = coordinateWithinBounds(x);
+    y = coordinateWithinBounds(y);
     updatePixel(gridArray[x][y],color);
   }
   return false;
@@ -1348,12 +1359,20 @@ function line(x1,y1,x2,y2,color){
     if(!color){
       color = newDrawColor;
     }
-
+    x1 = coordinateWithinBounds(x1);
+    y1 = coordinateWithinBounds(y1);
+    x2 = coordinateWithinBounds(x2);
+    y2 = coordinateWithinBounds(y2);
     var diffX = x2-x1;
     var diffY = y2-y1;
     for(i = x1; i <= x2; i++){
-        console.log("i: " + i);
-        updatePixel(gridArray[i][y2],color);
+      for(n = y1; n <= x2; n++){
+        console.log("n: " + n);
+        console.log("i " + i);
+        i = coordinateWithinBounds(i);
+        n = coordinateWithinBounds(n);
+        updatePixel(gridArray[i][n],color);
+      }
     }
   }
 }
