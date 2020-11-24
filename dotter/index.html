@@ -46,28 +46,47 @@
     #main{
       flex: 1;
     }
+    #code-editor .comment{
+      color: var(--textColor) !important;
+      opacity: .8;
+      position: relative;
+      top: -6px;
+    }
     #export-window{
-      z-index: 9999;
+      z-index: 999009;
       width: 80%;
       height: 80%;
       display: flex;
       position: fixed;
+      flex-direction: column;
       top: 50%;
       left: 50%;
+      padding: 20px;
       /* bring your own prefixes */
       transform: translate(-50%, -50%);
-      background-color: var(--bgColor);
+      background-color: grey;
     }
     .overlay{
       height: 100%;
       width: 100%;
       position: fixed; /* Stay in place */
-      z-index: 999;
+      z-index: 99999;
       left: 0;
       top: 0;
       background-color: var(--bgColor);
       filter: brightness(0.2);
       opacity: .4;
+    }
+    .modal-inner{
+      display: flex;
+      flex: 1;
+      height: 100%;
+    }
+    .modal-inner > div{
+    }
+    .modal-inner textarea{
+      display: flex;
+      height: 50%;
     }
     #pxon-scale{
       position: absolute;
@@ -209,9 +228,8 @@
     code div::before{
       content: ">";
       margin-left:-12px;
-      padding-right: 5px;
     }
-    code * {
+    code {
       color: var(--currentNewDrawColor) !important;
       text-align: left;      
       text-transform: unset !important;
@@ -308,6 +326,19 @@
   <body>
     <!-- <div id="export-window">
       <h2>Export your dots to PXON or SVG</h2>
+      <div class="modal-inner">
+        <div id="export-pxon">
+          <p>Here's your pxon</p>
+          <textarea id="export-pxon-textarea"></textarea>
+        </div>
+        <div id="export-svg">
+          <p>Here's your svg</p>
+          <textarea id="export-svg-textarea"></textarea>
+        </div>
+        <div id="preview">
+          <p>Here's your preview</p>
+        </div>
+      </div>
     </div>
     <div class="overlay"></div> -->
     <div id="main">
@@ -396,14 +427,42 @@
         </div>
       </div>
       <div id="draw-with-words">
-          <p><span style="font-size:12px">⚠️</span> heads up this is just javascript</p>
-          <p>but also with extra functions available.</p><p>like <span class="code">paint(<b>x</b>,<b>y</b>);</span></p><p>just replace <b>x</b> and <b>y</b> with coordinates. (note: the board is 16x16 and begins at 0,0!)</p>
-          <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
-            <span class="comment">// try writing paint(0,5);</span>
-            <br/>
-          <div></div>
-        </code>
-        <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
+        <p><span style="font-size:12px">⚠️</span> heads up this is just javascript</p>
+        <p>but also with extra functions available, like:</p>
+        <p>
+          <span class="code">paint(<b>x</b>,<b>y</b>);</span><br/>
+          <span class="code">square(<b>x1</b>,<b>y1</b>,<b>x2</b>,<b>y2</b>);</span><br/>
+          <span class="code">horizontal(<b>y</b>);</span><br/>
+          <span class="code">vertical(<b>x</b>);</span><br/>
+        </p>
+        <p>just replace <b>x</b> and <b>y</b> with coordinates.</p>
+        <p>bonus: all of these take color (string) as an optional parameter.</p>
+        <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
+          <span class="comment" contenteditable="true">// try <strong>paint(0,1,"red");</strong> below<br> 
+           // or, submit the existing code ✨</span>
+          <br/>
+          <div>
+            for(i=0;i<16;i++){<br/>
+              &nbsp;&nbsp;let color = "hsl("+ i*20 +",65%,70%)";<br/>
+              &nbsp;&nbsp;color = color.toString();<br/>
+              &nbsp;&nbsp;horizontal(i, color);<br/>
+            };
+          </div>
+      </code>
+      <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
+        <!-- <pre>
+paint(x,y,color)
+  x = (number) x coordinate
+  y = (number) y coordinate
+  color = (string) optional. color in hex "#ffffff" format
+  
+square(x1,y1,x2,y2,color)
+  x1 = (number) x coordinate
+  y1 = (number) y coordinate
+  x2 = (number) x coordinate
+  y2 = (number) y coordinate
+  color = (string) optional. color in hex "#ffffff" format
+        </pre> -->
       </div>
     </div>
     <div id="pxon-panel">
@@ -430,6 +489,15 @@
     
     
 <script>
+function sleep(milliseconds) { 
+  let timeStart = new Date().getTime(); 
+  while (true) { 
+      let elapsedTime = new Date().getTime() - timeStart; 
+      if (elapsedTime > milliseconds) { 
+          break; 
+      } 
+  }
+}
 
 var gridContainer,
   undoStack = [],
@@ -445,7 +513,6 @@ var gridContainer,
   hasDrawnSwitch = false,
   pxonScale = 1,
   dot,
-  i,
   color,
   undoSize,
   currentUndoSpot,
@@ -729,8 +796,8 @@ function updateGlowRadius(amount){
 
 // Bind to changes on DRAW / ERASE RADIO
 var drawEraseRadios = document.querySelectorAll('input[name=draw-erase-radio]');
-for (var i = 0; i < drawEraseRadios.length; i++) {
-  drawEraseRadios[i].addEventListener('change', function() {
+if(drawEraseRadios.length) {
+  drawEraseRadios[0].addEventListener('change', function() {
       if(this.value == "draw"){
         currentTool = "draw";
       } else{
@@ -784,6 +851,7 @@ function updatePxonViewerCheckbox(input){
 
 // Set up copy pxon button
 copyPxonButton = document.getElementById("copy-pxon");
+
 copyPxonButton.addEventListener("click", function(){
   pxonOutputPre = document.getElementById("raw");
   var copiedPxon = pxonOutputPre;
@@ -991,8 +1059,8 @@ function startup() {
   dotBoard.className = "board board0";
   gridContainer.appendChild(dotBoard);        
   dotCount = BOARD_SIZE * BOARD_SIZE
-  for (i = 0; i<dotCount; i++) {
-    dot = dot+i;
+  for (iteration = 0; iteration<dotCount; iteration++) {
+    dot = dot+iteration;
     dot = document.createElement("div");
     dot.className = "dot";
     dotBoard.appendChild(dot);
@@ -1106,6 +1174,15 @@ function bindClicksForCurrentBoard(){
       
 // WHAT HAPPENS WHEN A DOT IS CLICKED
 function updatePixel(dot, color) {
+  if(currentTool == "erase"){
+    erase(dot, color);
+  }else{
+    draw(dot, color);
+  }
+}
+
+function updatePixelAtCoordinate(x, y, color) {
+  dot = getPixelByCoordinate(x, y);
   if(currentTool == "erase"){
     erase(dot, color);
   }else{
@@ -1237,28 +1314,48 @@ function getCurrentPixels(){
   dots.forEach(dot => 
     currentBoard.push(dot)
   );
-  
-  // slice that array at each row of pixels, calculated from board size.
-  // each element in gridArray will be an array containing a row worth of
-  // pixel elements. 
-  for(i = 0; i < BOARD_SIZE; i++){
-    if(i < 1){
-      gridArray[i] = currentBoard.slice(0, BOARD_SIZE);
+   
+  //
+  //  Slice that array at each row of pixels, calculated from BOARD_SIZE.
+  //  Each element in gridArray will be an array containing a row worth of pixel
+  //  elements. This lets us get x,y coordinates from a previously flat list.
+  //
+  //  prev:
+  //  currentBoard[]  = [{"•","•","•","•","•","•","•","•","•"}] 
+  // 
+  //  now:                     x0  x1  x2  …
+  //  gridArray[][] =  y0 [{[{"•","•","•",}],
+  //                   y1   [{"•","•","•",}],
+  //                   y2   [{"•","•","•"}]}] 
+  //                   …
+  // 
+  for(loop = 0; loop < BOARD_SIZE; loop++){
+    if(loop < 1){
+      gridArray[loop] = currentBoard.slice(0, BOARD_SIZE);
     }else{
-      var oldVal = (i) * BOARD_SIZE;
-      var newVal = (i + 1) * BOARD_SIZE;
-      gridArray[i] = currentBoard.slice(oldVal, newVal);
+      var oldVal = (loop) * BOARD_SIZE;
+      var newVal = (loop + 1) * BOARD_SIZE;
+      gridArray[loop] = currentBoard.slice(oldVal, newVal);
     }
-
   }
   return gridArray;
 }
 
+function getPixelByCoordinate(x,y){
+  if( 0 <= x && x < BOARD_SIZE && 0 <= y && y < BOARD_SIZE){
+    return gridArray[y][x];
+  }else{
+    console.log("coordinate (" + x + ", " + y + ") was out of bounds, setting to 0,0");
+    return gridArray[0][0]
+    return false;
+  }
+}
 
 function updatePXON(){
   createPXON();
   pxonClean = JSON.stringify(pxon, undefined, 3)
-  document.getElementById("raw").innerHTML = pxonClean; 
+  document.getElementById("raw").innerHTML = pxonClean;
+  // document.getElementById("export-pxon-textarea").innerHTML = pxonClean; 
   hasDrawn(hasDrawnSwitch)
 } 
 
@@ -1336,57 +1433,69 @@ function coordinateWithinBounds(coordinate){
 }
 
 /////// API 
+
+// potential: paint/draw, erase, square, line, getColor, border, updateDrawColor,updateBackgroundColor,updateBaseColor 
       
 function paint(x,y,color){
-  if( x.isNaN && y.isNaN ){
-    console.log("both x and y coordinates need to be defined, and should be numbers!");
-  } else{
-    if(!color){
-      color = newDrawColor;
-    }
-    x = coordinateWithinBounds(x);
-    y = coordinateWithinBounds(y);
-    updatePixel(gridArray[x][y],color);
+  if(!color){
+    color = newDrawColor;
   }
-  return false;
+  updatePixelAtCoordinate(x,y,color);
+  undoStackAdd();
 }
 
-function line(x1,y1,x2,y2,color){
-  if( x1.isNaN && y1.isNaN && x2.isNaN && y2.isNaN ){
-    console.log("all coordinates need to be defined")
-  } else{
-    
-    if(!color){
-      color = newDrawColor;
-    }
-    x1 = coordinateWithinBounds(x1);
-    y1 = coordinateWithinBounds(y1);
-    x2 = coordinateWithinBounds(x2);
-    y2 = coordinateWithinBounds(y2);
-    var diffX = x2-x1;
-    var diffY = y2-y1;
-    for(i = x1; i <= x2; i++){
-      for(n = y1; n <= x2; n++){
-        console.log("n: " + n);
-        console.log("i " + i);
-        i = coordinateWithinBounds(i);
-        n = coordinateWithinBounds(n);
-        updatePixel(gridArray[i][n],color);
-      }
+function horizontal(y, color){
+  if(!color){
+    color = newDrawColor;
+  }
+  for(iter = 0; iter < BOARD_SIZE; iter++){
+    updatePixelAtCoordinate(iter,y,color);
+  }
+  undoStackAdd();
+}
+
+function vertical(x, color){
+  if(!color){
+    color = newDrawColor;
+  }
+  for(iter = 0; iter < BOARD_SIZE; iter++){
+    updatePixelAtCoordinate(x,iter,color);
+  }
+  undoStackAdd();
+}
+
+function square(x1,y1,x2,y2,color){
+  if(!color){
+    color = newDrawColor;
+  }
+
+  //do a switcharoo in case latter coordinates are closer to 0,0
+  if(x1 > x2){
+    let oldValHolder = x1; x1 = x2; x2 = oldValHolder;
+  }
+  if(y1 > y2){
+    let oldValHolder = y1; y1 = y2; y2 = oldValHolder;
+  }
+  
+  //draw rows to fill in the square
+  for(xAxis = x1; xAxis <= x2; xAxis++){
+    for(yAxis = y1; yAxis <= y2; yAxis++){
+      // console.log("attempting to draw at (" + xAxis + ", " + yAxis + ")");
+      updatePixelAtCoordinate(xAxis, yAxis, color);
     }
   }
+  undoStackAdd();
+
 }
-      
-      
-      
 
 
 
+//// PXON TO SVG
 
 // Render a PXON document to SVG
 // https://github.com/pxon/pxon-schema
 
-function render(pxon, container) {
+function renderSVG(pxon, container) {
 
   // Remove existing
   while (container.firstChild) {
@@ -1397,8 +1506,8 @@ function render(pxon, container) {
   const el = document.createElementNS (svgns, 'svg');
   el.setAttribute('xmlns', svgns);
   el.setAttribute('version', '1.1');
-  el.style.width = '100%';
-  el.style.height = '100%';
+  el.style.width = BOARD_SIZE;
+  el.style.height = BOARD_SIZE;
 
   const {
     pxif: { pixels }
@@ -1418,25 +1527,27 @@ function render(pxon, container) {
     pixel.setAttribute('width', ps);
     pixel.setAttribute('height', ps);
     pixel.setAttribute('fill', pc);
-
     el.appendChild(pixel);
   });
-
   container.appendChild(el);
+  document.getElementById('export-svg-textarea').value = el.outerHTML;
 }
-function dunno(thiswasntinafunction){
-  
-  const input = document.getElementById('input');
-  const output = document.createElement('div');
-  output.setAttribute('id', 'output');
-  document.body.appendChild(output);
-  
-  input.oninput = function(e) {
-    render(input.value, output);
+
+function renderSVGfromExportWindow(){
+  var oldSvg = document.getElementById('svg-output');
+  if(oldSvg){
+    oldSvg.remove();
   }
+  const input = document.getElementById('export-pxon-textarea');
+  const output = document.createElement('div');
+  output.setAttribute('id', 'svg-output');
+  document.getElementById('preview').appendChild(output);
   
+  // input.oninput = function(e) {
+    renderSVG(input.value, output);
+  // }
   // Trigger initial render
-  input.dispatchEvent(new Event('input'));
+  // input.dispatchEvent(new Event('input'));
 }
 
 
