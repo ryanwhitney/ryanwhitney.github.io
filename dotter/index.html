@@ -166,8 +166,8 @@
     .board{
       display: grid;
       grid-gap: 3px 3px;
-      grid-template-rows: 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px;
-      grid-template-columns: 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px 20px;
+      grid-template-rows: repeat(16, 20px);
+      grid-template-columns: repeat(16, 20px);
     }
     .dot{
       background-color: #19181A;
@@ -269,8 +269,8 @@
     #undo-history .board{
       grid-gap: 0 0;
       margin-right: 10px;
-      grid-template-rows: 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px;
-      grid-template-columns: 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px;
+      grid-template-rows: repeat(16, 2px);
+      grid-template-columns: repeat(16, 2px);
     }
     #undo-history .dot[style]{
       box-shadow: none !important;
@@ -657,8 +657,8 @@ function updateDotScale(sizeInPx){
   const style = document.createElement('style');
   style.innerHTML = `
     #grid-container .board{
-      grid-template-rows:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
-      grid-template-columns:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
+      grid-template-rows: repeat(` + BOARD_SIZE + `, ` + n + `);
+      grid-template-columns: repeat(` + BOARD_SIZE + `, ` + n + `);
     } `;   
   document.head.appendChild(style);
   // update variable
@@ -870,8 +870,8 @@ function updateUndoVisualizerScale(n){
   const style = document.createElement('style');
   style.innerHTML = `
     #undo-history .board{
-      grid-template-rows:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
-      grid-template-columns:` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + n + ` ` + `;
+      grid-template-rows: repeat(` + BOARD_SIZE + `, ` + n + `);
+      grid-template-columns: repeat(` + BOARD_SIZE + `, ` + n + `);
     } `;   
   document.head.appendChild(style);
 }
