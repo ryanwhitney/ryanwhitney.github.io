@@ -797,13 +797,11 @@ function updateGlowRadius(amount){
 // Bind to changes on DRAW / ERASE RADIO
 var drawEraseRadios = document.querySelectorAll('input[name=draw-erase-radio]');
 if(drawEraseRadios.length) {
-  drawEraseRadios[0].addEventListener('change', function() {
-      if(this.value == "draw"){
-        currentTool = "draw";
-      } else{
-        currentTool = "erase";
-      }
-  });
+  for(count = 0; count < drawEraseRadios.length; count++){
+    drawEraseRadios[count].addEventListener('change', function() {
+        currentTool = this.value;
+    });
+  }
 }
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
