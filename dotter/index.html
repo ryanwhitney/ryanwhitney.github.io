@@ -90,6 +90,7 @@
       color: var(--textColor);
       transition: width .2s ease-in-out;
       border-left: 1px solid rgba(255,255,255,.03);
+      background: var(--bgColor);
     }
     #pxon-panel .right-panel-text{
       padding: 0 20px 20px;
@@ -209,9 +210,10 @@
     #more-tools{
       display: flex;
       flex-direction: column;
-      position: absolute;
+      position: fixed;
       bottom: 10px;
       left: 10px;
+      z-index: 9999;
     }
     #more-tools input,
     #more-tools label{
@@ -257,21 +259,32 @@
       box-shadow: none !important;
     }
     .before-drawing{
+      height: auto;
       display: block;
       opacity: 1;
       transition: all .5s ease;
     }
     .after-drawing{
+      height: 0;
       display: none;
       opacity: 0;
       transition: all .5s ease;
     }
-    @media only screen and (min-width: 600px) {
+    
+    #hide-checkbox:checked + label {
+      transform: scale(2, 3);
+      position: relative;
+      left: -5px;
+      bottom: -5px;
+      font-size: 10px;
+    }
+    @media only screen and (min-width: 440px) {
       input,label, button{
         text-transform: lowercase;
         font-size:14px;
         color: var(--textColor);
       }
+
     }
     </style>
   </head>  
@@ -340,7 +353,7 @@
         <div id="more-tools">
           <div class="check">
             <input type="checkbox" id="hide-checkbox" name="hide">
-            <label for="hide">hide</label>
+            <label for="hide">minimize</label>
           </div>
           <div class="check experiment">
             <input type="checkbox" id="code-editor-checkbox" name="code-editor" checked>
@@ -1243,10 +1256,12 @@ function hasDrawn(toggle){
     var afterText = document.querySelectorAll(".after-drawing");  
     if(beforeText[0] && afterText[0]){
       beforeText[0].style.opacity = 0;
+      beforeText[0].style.height = 0;
       afterText[0].style.display = "block";
       setTimeout(function(){
         beforeText[0].style.display = "none";
         afterText[0].style.opacity = 1;
+        afterText[0].style.height = "auto";
       }, 500);
     }
     hasDrawnSwitch = true 
