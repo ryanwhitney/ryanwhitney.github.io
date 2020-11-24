@@ -116,8 +116,14 @@
     }
     input,label, button{
       text-transform: lowercase;
-      font-size:16px;
+      font-size: 13px;
       color: var(--textColor);
+    }
+    label{
+      padding-bottom: 5px;
+    }
+    input{
+      font-size:16px;
     }
     .tools{
       display: flex;
@@ -126,7 +132,8 @@
       justify-content: space-around;
       align-items: flex-end;
       max-width: 500px;
-      margin: 30px auto 20px;
+      margin: 0 auto;
+      padding: 20px 0 10px;
     }
     .tools label{
       display: block;
@@ -145,6 +152,7 @@
          -moz-user-select: none; /* Old versions of Firefox */
           -ms-user-select: none; /* Internet Explorer/Edge */
               user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+      margin-bottom: 10px;
     }
     #grid-container .board{
       margin: auto;
@@ -170,6 +178,7 @@
     }
     input[type=number]{
       background-color:transparent;
+      width: 60px;
     }
     input[type=submit]{
       margin-top: 10px;
@@ -306,41 +315,41 @@
       <div id="grid-container" class="board-container"></div>
       <div class="tools colors">
         <div id="initial-dot-color-select">
-          <label for="select-color">Base color</label>
+          <label for="initial-dot-color-selected">Base color</label>
           <input type="color" id="initial-dot-color-selected" name="select-initial-dot-color"
              value="#1f1f1f">
         </div>
         <div id="color-select">
-          <label for="select-color">Draw Color</label>
+          <label for="color-selected">Draw Color</label>
           <input type="color" id="color-selected" name="select-color"
              value="#FFA57D">
         </div>
         <div id="background-select">
-          <label for="select-color">Background Color</label>
+          <label for="background-color-selected">Background Color</label>
           <input type="color" id="background-color-selected" name="select-background-color"
              value="#19181A">
         </div>
       </div>
       <div class="tools sizing">
-        <div id="select-dot-size" style="width:80px;">
-          <label for="select-dot-size">dot size</label>
+        <div id="select-dot-size" >
+          <label for="dot-size">dot size</label>
           <input type="number" id="dot-size" name="select-dot-size"
-             value="20" style="width:80px;">
+             value="20">
         </div>
-        <div id="select-dot-radius-amount" style="width:80px;">
-          <label for="select-dot-radius-amount">radius</label>
+        <div id="select-dot-radius-amount">
+          <label for="dot-radius-amount">dot radius</label>
           <input type="number" id="dot-radius-amount" name="select-dot-radius-amount"
-             value="3" style="width:80px;">
+             value="3" >
         </div>
-        <div id="select-grid-gap-size" style="width:80px;">
-          <label for="select-grid-gap-size">grid gap</label>
+        <div id="select-grid-gap-size">
+          <label for="grid-gap-size">grid gap</label>
           <input type="number" id="grid-gap-size" name="select-grid-gap-size"
-             value="3" style="width:80px;">
+             value="3" >
         </div>
-        <div id="select-glow-amount" style="width:60px;">
-          <label for="select-glow-amount">glow</label>
+        <div id="select-glow-amount">
+          <label for="glow-amount">glow</label>
           <input type="number" id="glow-amount" name="select-glow-amount"
-             value="0" style="width:40px;">
+             value="0">
         </div>
       </div>
       <div class="tools-container">
@@ -361,11 +370,11 @@
         <div id="more-tools">
           <div class="check">
             <input type="checkbox" id="hide-checkbox" name="hide">
-            <label for="hide">minimize</label>
+            <label for="hide-checkbox">minimize</label>
           </div>
           <div class="check experiment">
             <input type="checkbox" id="code-editor-checkbox" name="code-editor" checked>
-            <label for="code-editor">draw with words</label>
+            <label for="code-editor-checkbox">draw with words</label>
           </div>
           <div class="check experiment">
             <input type="checkbox" id="enable-pxon-viewer" name="enable-pxon-viewer">
