@@ -52,24 +52,37 @@
       filter: brightness(0.2);
       opacity: .4;
     }
+    #pxon-scale{
+      position: absolute;
+      right: 85px;
+      top: 7.5px;
+    }
     #copy-pxon{
       position: absolute;
       right: 5px;
       top: 5px;
     }
-    #raw{
-      /* max-width: 100%; */
+    #pxon-panel{
+      display: flex;
+      flex-direction: column;
       line-break: normal;
-      height: 100px;
-      overflow: hidden;
-      overflow-y: scroll;
-      background: none;
-      border: none;
       float: right;
       width: 40%;
       height: 100vh;
       display: none;
       z-index: 1;
+      color: var(--textColor);
+      transition: width .2s ease-in-out;
+    }
+    #pxon-panel .pxon-panel-top{
+      height: 40px;
+    }
+    #raw{
+      overflow: hidden;
+      overflow-y: scroll;
+      background: none;
+      border: none;
+      height: 100%;
       color: var(--textColor);
     }
     input,label, button{
@@ -215,8 +228,16 @@
       <h2>Export your dots to PXON or SVG</h2>
     </div>
     <div class="overlay"></div> -->
-    <button id="copy-pxon">copy</button>
-    <textarea id="raw"></textarea>
+    <div id="pxon-panel">
+      <div class="pxon-panel-top">
+        <div id="pxon-scale">
+          <label for="select-pxon-scale">pxon scale:</label>
+          <input type="number" id="select-pxon-scale" value="1" style="width:40px;"/>
+        </div>
+        <button id="copy-pxon">copy</button>
+      </div>
+      <textarea id="raw"></textarea>
+    </div>
     <div class="tools">
       <div id="initial-dot-color-select">
         <label for="select-color">Initial Dot Color</label>
@@ -323,6 +344,7 @@ var gridContainer,
   dotBoard,
   dotCount,
   currentTool,
+  pxonScale = 10,
   dot,
   i,
   color,
@@ -343,6 +365,7 @@ var inputInitialDotColor = document.getElementById("initial-dot-color-selected")
   inputDrawEraseRadio = document.getElementById("draw"),
   inputHideCheckbox = document.getElementById("hide-checkbox"),
   inputPxonViewerCheckbox = document.querySelector("input[name=enable-pxon-viewer]"),
+  inputPxonScale = document.getElementById("pxon-scale")
   inputCodeEditorCheckbox = document.getElementById("code-editor-checkbox")
   inputUndoVisualizerCheckbox = document.querySelector("input[name=enable-undo-visualizer]"),
   inputUndoVisualizerScaleContainer = document.getElementById("undo-tile-scale"),
@@ -373,6 +396,24 @@ var initialDotColor,
   undoVisualizerCheckbox,
   undoVisualizerScale,
   undoVisualizerGap;
+  
+  var defaultOptions = {
+    initialDotColor: "#1f1f1f",
+    newDrawColor: "#ffa57d",
+    backgroundColor: "#19181a",
+    dotSize: 20,
+    dotRadius: 3,
+    gridGapSize: 3,
+    glowRadius: 0,
+    hideCheckbox: false,
+    pxonViewerCheckbox: false,
+    pxonScale: 1,
+    codeEditorCheckbox: true,
+    undoVisualizerCheckbox: false,
+    undoVisualizerScale: 2,
+    undoVisualizerGap: 0,
+    currentTool: "draw"
+  }
 
 function getState(){
   initialDotColor = localStorage.getItem("initialDotColor") | inputInitialDotColor.value;
@@ -572,7 +613,7 @@ inputGlowRadius.addEventListener("input", function() {
 // Handle changes to GLOW AMOUNT
 function updateGlowRadius(amount){
   if(!amount){
-    amount = 3;
+    amount = 0;
   }
   var dots = document.querySelectorAll(".dot");
   dots.forEach(item => 
@@ -607,29 +648,28 @@ inputPxonViewerCheckbox.addEventListener(
   }
 );
 
-copyPxonButton = document.getElementById("copy-pxon");
-pxonOutputPre = document.getElementById("raw");
 
 function updatePxonViewerCheckbox(input){
+  pxonContainer = document.getElementById("pxon-panel");
   if(input){
     if(input.checked) {
-      pxonOutputPre.style.display = "block";
-      copyPxonButton.style.display = "block";
+      pxonContainer.style.display = "flex";
+      pxonContainer.style.width = "40%";
       inputPxonViewerCheckbox.checked = input.checked;
     } else {
-      pxonOutputPre.style.display = "none";
-      copyPxonButton.style.display = "none";
+      pxonContainer.style.display = "none";
+      pxonContainer.style.width = "0";
       inputPxonViewerCheckbox.checked = input.checked;
     }
   }else{
-    pxonOutputPre.style.display = "none";
-    copyPxonButton.style.display = "none";
+    pxonContainer.style.display = "none";
+    pxonContainer.style.width = "0";
     inputPxonViewerCheckbox.checked = false;
   }  
 }
 
 // Set up copy pxon button
-
+copyPxonButton = document.getElementById("copy-pxon");
 copyPxonButton.addEventListener("click", function(){
   pxonOutputPre = document.getElementById("raw");
   var copiedPxon = pxonOutputPre;
@@ -1110,7 +1150,8 @@ function getCurrentPixels(){
 
 function updatePXON(){
   createPXON();
-  document.getElementById("raw").innerHTML = JSON.stringify(pxon, undefined, 3); 
+  pxonClean = JSON.stringify(pxon, undefined, 3)
+  document.getElementById("raw").innerHTML = pxonClean; 
 } 
 
 // Export PXON
@@ -1119,11 +1160,11 @@ function createPXON(){
   pxon = {
     exif: {
       software: "ryanwhitney.github.io/dotter",
-      artist: "YOUR NAME",
+      artist: "YOUR NAME HERE!",
       imageDescription: "DESCRIBE THE THING",
       userComment: "AND COMMENT ON IT",
       copyright: "do your name again ©",
-      dateTime: "2020-11-17T15:21:51.761Z"
+      dateTime: new Date()
     },
     pxif: {
       pixels: []
@@ -1146,9 +1187,9 @@ function createPXON(){
   for(x = 0; x < BOARD_SIZE; x++){
     for(y = 0; y < BOARD_SIZE; y++){            
         var pixel = new Object();  
-        pixel.x = y; // we can agree to not talk
-        pixel.y = x; // about this part ok
-        pixel.size = 1;
+        pixel.x = (y * pxonScale); // we can agree to not talk
+        pixel.y = (x * pxonScale); // about this part ok
+        pixel.size = pxonScale;
         pixel.color = getpixelColor(gridArray);
         pxon.pxif.pixels[n] = pixel;
         n++;
@@ -1190,7 +1231,87 @@ function line(x1,y1,x2,y2,color){
       
       
       
-      
+
+
+
+
+// Render a PXON document to SVG
+// https://github.com/pxon/pxon-schema
+
+function render(pxon, container) {
+
+  // Remove existing
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
+
+  const svgns = 'http://www.w3.org/2000/svg';
+  const el = document.createElementNS (svgns, 'svg');
+  el.setAttribute('xmlns', svgns);
+  el.setAttribute('version', '1.1');
+  el.style.width = '100%';
+  el.style.height = '100%';
+
+  const {
+    pxif: { pixels }
+  } = JSON.parse(pxon);
+
+  pixels.forEach((p) => {
+    const ps = p.size;
+    const pc = p.color;
+
+    // Normalise x/y values to closest grid coordinate
+    const px = ps * Math.ceil(p.x/ps);
+    const py = ps * Math.ceil(p.y/ps);
+
+    const pixel = document.createElementNS(svgns, 'rect');
+    pixel.setAttribute('x', px);
+    pixel.setAttribute('y', py);
+    pixel.setAttribute('width', ps);
+    pixel.setAttribute('height', ps);
+    pixel.setAttribute('fill', pc);
+
+    el.appendChild(pixel);
+  });
+
+  container.appendChild(el);
+}
+
+function dunno(thiswasntinafunction){
+  
+  const input = document.getElementById('input');
+  const output = document.createElement('div');
+  output.setAttribute('id', 'output');
+  document.body.appendChild(output);
+  
+  input.oninput = function(e) {
+    render(input.value, output);
+  }
+  
+  // Trigger initial render
+  input.dispatchEvent(new Event('input'));
+}
+
+
+// DOWNLOAD!? thank u https://stackoverflow.com/a/30832210
+function download(data, filename, type) {
+  var file = new Blob([data], {type: type});
+  if (window.navigator.msSaveOrOpenBlob) // IE10+
+      window.navigator.msSaveOrOpenBlob(file, filename);
+  else { // Others
+      var a = document.createElement("a"),
+              url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);  
+      }, 0); 
+  }
+}
+
     </script>
   </body>
 </html>
