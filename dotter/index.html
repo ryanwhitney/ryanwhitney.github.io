@@ -129,7 +129,14 @@
       margin: 30px auto 20px;
     }
     .tools label{
-      display: block
+      display: block;
+      line-height: 1.5;
+    }
+    .tools.colors div, .tools.sizing div{
+      text-align: center;
+    }
+    #select-draw-erase label{
+      display: inline-block;
     }
     #grid-container{
       -webkit-touch-callout: none; /* iOS Safari */
@@ -175,6 +182,7 @@
     #draw-with-words{
       margin: 40px auto 20px;
       width: 364px;
+      padding-bottom: 50px;
       color: var(--textColor);
     }
     code{
@@ -298,12 +306,12 @@
       <div id="grid-container" class="board-container"></div>
       <div class="tools colors">
         <div id="initial-dot-color-select">
-          <label for="select-color">Initial Dot Color</label>
+          <label for="select-color">Base color</label>
           <input type="color" id="initial-dot-color-selected" name="select-initial-dot-color"
              value="#1f1f1f">
         </div>
         <div id="color-select">
-          <label for="select-color">New Dot Color</label>
+          <label for="select-color">Draw Color</label>
           <input type="color" id="color-selected" name="select-color"
              value="#FFA57D">
         </div>
@@ -320,7 +328,7 @@
              value="20" style="width:80px;">
         </div>
         <div id="select-dot-radius-amount" style="width:80px;">
-          <label for="select-dot-radius-amount">dot radius</label>
+          <label for="select-dot-radius-amount">radius</label>
           <input type="number" id="dot-radius-amount" name="select-dot-radius-amount"
              value="3" style="width:80px;">
         </div>
@@ -980,13 +988,10 @@ function startup() {
     dot.className = "dot";
     dotBoard.appendChild(dot);
   }
-  
-  
-  
+    
   updateDotScale(dotSize);
   updateDotRadius(dotRadius);
   updateGlowRadius(glowRadius);
-  
   
   // ADD INITIAL STATE TO UNDO STACK
   grid = document.getElementById('grid-container');
@@ -1106,7 +1111,6 @@ function draw(dot, color){
     dot.style.cssText += `--glowColor:` + color + `;--dotColor:` + color + `;background-color: var(--dotColor);z-index:99;`;
     updatePXON();
   }else{
-    console.log("same dot");
     return false;
   }
   prevDot = dot;
@@ -1121,7 +1125,6 @@ function erase(dot, color){
 
 function undoStackAdd(){
   undoCount += 1;
-  // console.log("undocount: " + undoCount);
   
   // ADD A CLONE OF THE GRID TO AN ARRAY
   gridContainer.firstElementChild.className = "board board" + undoStack.length;
