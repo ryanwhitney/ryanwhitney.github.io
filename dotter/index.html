@@ -24,28 +24,53 @@
       background-color: #000;
       transition: background-color .3s ease;
       padding-bottom: 160px;
-    }
-    html{
-      ;
-    }
-    body *{
-      color: white;
+      --textColor: white;
     }
     p{
       line-height: 1.5;
+    }
+    #export-window{
+      z-index: 9999;
+      width: 80%;
+      height: 80%;
+      display: flex;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      /* bring your own prefixes */
+      transform: translate(-50%, -50%);
+      background-color: var(--bgColor);
+    }
+    .overlay{
+      height: 100%;
+      width: 100%;
+      position: fixed; /* Stay in place */
+      z-index: 999;
+      left: 0;
+      top: 0;
+      background-color: var(--bgColor);
+      filter: brightness(0.2);
+      opacity: .4;
+    }
+    #copy-pxon{
+      position: absolute;
+      right: 5px;
+      top: 5px;
     }
     #raw{
       /* max-width: 100%; */
       line-break: normal;
       height: 100px;
-      white-space: pre-line;
       overflow: hidden;
       overflow-y: scroll;
+      background: none;
+      border: none;
       float: right;
       width: 40%;
       height: 100vh;
       display: none;
       z-index: 1;
+      color: var(--textColor);
     }
     input,label, button{
       text-transform: lowercase;
@@ -95,6 +120,7 @@
       border-width: 1px;
       border-color: var(--currentNewDrawColor) !important;
       float: right;
+      color: var(--textColor);
     }
     #draw-with-words{
       margin: 40px auto 20px;
@@ -129,6 +155,7 @@
     button{
       background-color: black;
       border-width: 1px;
+      color: var(--textColor);
     }
     #more-tools{
       display: flex;
@@ -139,7 +166,7 @@
     }
     #more-tools input,
     #more-tools label{
-      background-color: rgba(0,0,0,.6);
+      background-color: rgba(0,0,0,.2);
       
     }
     #undo-visualizer * {
@@ -183,7 +210,12 @@
     </style>
   </head>  
   <body>
-    <pre id="raw"></pre>
+    <!-- <div id="export-window">
+      <h2>Export your dots to PXON or SVG</h2>
+    </div>
+    <div class="overlay"></div> -->
+    <button id="copy-pxon">copy</button>
+    <textarea id="raw"></textarea>
     <div class="tools">
       <div id="initial-dot-color-select">
         <label for="select-color">Initial Dot Color</label>
@@ -223,9 +255,9 @@
            value="0" style="width:40px;">
       </div>
       <div id="select-draw-erase">
-        <input type="radio" id="select-draw-radio" name="draw-erase" value="draw" / checked>
+        <input type="radio" id="select-draw-radio" name="draw-erase-radio" value="draw" / checked>
         <label for="select-draw-radio">draw</label><br/>
-        <input type="radio" id="select-erase-radio" name="draw-erase" value="erase" />
+        <input type="radio" id="select-erase-radio" name="draw-erase-radio" value="erase" />
         <label for="select-erase-radio">erase</label>
       </div>
       <div class="undo">
@@ -289,6 +321,7 @@ var gridContainer,
   BOARD_SIZE = 16,
   dotBoard,
   dotCount,
+  currentTool,
   dot,
   i,
   color,
@@ -306,6 +339,7 @@ var inputInitialDotColor = document.getElementById("initial-dot-color-selected")
   inputDotRadius = document.getElementById("dot-radius-amount"),
   inputGridGapSize = document.getElementById("grid-gap-size"),
   inputGlowRadius = document.getElementById("glow-amount"),
+  inputDrawEraseRadio = document.getElementById("draw"),
   inputHideCheckbox = document.getElementById("hide-checkbox"),
   inputPxonViewerCheckbox = document.querySelector("input[name=enable-pxon-viewer]"),
   inputCodeEditorCheckbox = document.getElementById("code-editor-checkbox")
@@ -354,6 +388,7 @@ function getState(){
   undoVisualizerScale = inputUndoVisualizerScale.value;
   undoVisualizerGap = inputUndoVisualizerGap.value;
 }
+
 
 function loadState(){
   if (typeof(Storage) !== "undefined") {
@@ -551,19 +586,68 @@ function updateGlowRadius(amount){
   saveState();
 }
 
+// Bind to changes on DRAW / ERASE RADIO
+var drawEraseRadios = document.querySelectorAll('input[name=draw-erase-radio]');
+for (var i = 0; i < drawEraseRadios.length; i++) {
+  drawEraseRadios[i].addEventListener('change', function() {
+      if(this.value == "draw"){
+        currentTool = "draw";
+      } else{
+        currentTool = "erase";
+      }
+  });
+}
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
 inputPxonViewerCheckbox.addEventListener( 
   'change',
   function() {
-    if(this.checked) {
-      document.getElementById("raw").style.display = "block"
-    } else {
-      document.getElementById("raw").style.display = "none"
-    }
-    bindClicksForCurrentBoard();
+    updatePxonViewerCheckbox(this);
   }
 );
+
+copyPxonButton = document.getElementById("copy-pxon");
+pxonOutputPre = document.getElementById("raw");
+
+function updatePxonViewerCheckbox(input){
+  if(input){
+    if(input.checked) {
+      pxonOutputPre.style.display = "block";
+      copyPxonButton.style.display = "block";
+      inputPxonViewerCheckbox.checked = input.checked;
+    } else {
+      pxonOutputPre.style.display = "none";
+      copyPxonButton.style.display = "none";
+      inputPxonViewerCheckbox.checked = input.checked;
+    }
+  }else{
+    pxonOutputPre.style.display = "none";
+    copyPxonButton.style.display = "none";
+    inputPxonViewerCheckbox.checked = false;
+  }
+  
+  bindClicksForCurrentBoard();
+}
+
+// Set up copy pxon button
+
+copyPxonButton.addEventListener("click", function(){
+  pxonOutputPre = document.getElementById("raw");
+  var copiedPxon = pxonOutputPre;
+  copiedPxon.focus();
+  copiedPxon.select();
+  try {
+    let successful = document.execCommand('copy');
+    let msg = successful ? 'successful' : 'unsuccessful';
+    copyPxonButton.innerText = "successfully copied!";
+    setTimeout(function(){
+      copyPxonButton.innerText = "copy again";
+    }, 2000);
+  } catch(err) {
+    alert('failed to copy. ☹️ … ' + err);
+  }
+
+})
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
 inputHideCheckbox.addEventListener( 
@@ -728,6 +812,7 @@ function updateBackgroundColor(color){
     body {
         --bgColor: ` + color + `;
         background-color: var(--bgColor);
+        --textColor: ` + foregroundTextColor +`;
         color: ` + foregroundTextColor +`;
     }`;     
   // set the value
@@ -743,10 +828,11 @@ function updateBackgroundColor(color){
       
 //////// START UP   
 function startup() {
-  loadState();
+  // loadState();
   updateInitialDotColor(initialDotColor);
   updateBackgroundColor(backgroundColor);
   updateNewDrawColor(newDrawColor);
+  updatePxonViewerCheckbox(pxonViewerCheckbox);
 
   // CREATE BOARD
   gridContainer = document.getElementById('grid-container');
@@ -780,7 +866,14 @@ function startup() {
 
 };
 
-startup();
+
+if(document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+  console.log("waiting…");
+  callback(); 
+} else {
+  console.log("starting up…");
+  document.addEventListener("DOMContentLoaded", startup());
+}
 
       
 //////// BIND CLICKS TO ACTIVE BOARD PIXELS
@@ -794,13 +887,13 @@ function bindClicksForCurrentBoard(){
   Array.prototype.forEach.call(dots, function(dot, i) {
     dot.onmousedown = function() {
       pressed = true;
-      draw(dot, newDrawColor);
+      updatePixel(dot, newDrawColor);
       undoStackReset();
       saveState();
     };
     dot.onmouseenter = function() {
       if (pressed == true) {
-        draw(dot, newDrawColor);
+        updatePixel(dot, newDrawColor);
       }
     };
     dot.onmouseup = function() {
@@ -827,49 +920,66 @@ function bindClicksForCurrentBoard(){
   
   var theBoard = document.querySelectorAll("#grid-container .board");
 
-  theBoard[0].addEventListener('touchstart', function(e){
-    var target = e.target;
-    pressed = true;
-    if(target.classList.contains("dot")){
-      draw(target, newDrawColor);
-    }
-  }, false);
-  
-  theBoard[0].addEventListener('touchmove', e => {
-    var xPos = e.changedTouches[0].pageX;
-    var yPos = e.changedTouches[0].pageY;
-    // get element based on xy coordinates, draw if its a dot
-    var currentlyTouched = document.elementFromPoint(xPos,yPos); 
-    if(currentlyTouched.classList.contains("dot")){
-      draw(currentlyTouched, newDrawColor);
-    }
-  }, { passive: false });
-  
-  theBoard[0].addEventListener('touchend', e => {
-    pressed = false;
-    undoStackAdd();
-    updateUndoButton();
-    saveState();
-  }, { passive: false });
-  
-  theBoard[0].addEventListener('touchcancel', e => {
-    pressed = false;
-    undoStackAdd();
-    updateUndoButton();
-    saveState();
-  }, { passive: false });
-  
+  for(i = 0; i < theBoard.length; i++){
+    theBoard[i].addEventListener('touchstart', function(e){
+      var target = e.target;
+      pressed = true;
+      if(target.classList.contains("dot")){
+        updatePixel(target, newDrawColor);
+      }
+    }, false);
+    
+    theBoard[i].addEventListener('touchmove', e => {
+      var xPos = e.changedTouches[0].pageX;
+      var yPos = e.changedTouches[0].pageY;
+      // get element based on xy coordinates, draw if its a dot
+      var currentlyTouched = document.elementFromPoint(xPos,yPos); 
+      if(currentlyTouched.classList.contains("dot")){
+        updatePixel(currentlyTouched, newDrawColor);
+      }
+    }, { passive: false });
+    
+    theBoard[i].addEventListener('touchend', e => {
+      pressed = false;
+      undoStackAdd();
+      updateUndoButton();
+      saveState();
+    }, { passive: false });
+    
+    theBoard[i].addEventListener('touchcancel', e => {
+      pressed = false;
+      undoStackAdd();
+      updateUndoButton();
+      saveState();
+    }, { passive: false });
+  }
 }
 
       
 //////// DRAW LOGIC
       
 // WHAT HAPPENS WHEN A DOT IS CLICKED
-function draw(dot, color) {
-  dot.style.cssText += `--glowColor:` + color + `;--dotColor:` + color + `;background-color: var(--dotColor);z-index:99999;`;
-  createPXON();
-  document.getElementById("raw").innerHTML = JSON.stringify(pxon, null, 3); 
+function updatePixel(dot, color) {
+  if(currentTool == "erase"){
+    erase(dot, color);
+  }else{
+    draw(dot, color);
+  }
 }
+
+function draw(dot, color){
+  dot.style.cssText += `--glowColor:` + color + `;--dotColor:` + color + `;background-color: var(--dotColor);z-index:99;`;
+  updatePXON();
+}
+function erase(dot, color){
+  dot.style.cssText = `z-index:1;`;
+  updatePXON();
+}
+ 
+function updatePXON(){
+  createPXON();
+  document.getElementById("raw").innerText = JSON.stringify(pxon, undefined, 3); 
+} 
  
 //////// UNDO LOGIC 
 
@@ -1002,10 +1112,10 @@ function createPXON(){
   pxon = {
     exif: {
       software: "ryanwhitney.github.io/dotter",
-      artist: "ryan",
-      imageDescription: "dots!",
-      userComment: "an example pixel drawing to show off pxon",
-      copyright: "2020",
+      artist: "YOUR NAME",
+      imageDescription: "DESCRIBE THE THING",
+      userComment: "AND COMMENT ON IT",
+      copyright: "do your name again ©",
       dateTime: "2020-11-17T15:21:51.761Z"
     },
     pxif: {
@@ -1029,9 +1139,9 @@ function createPXON(){
   for(x = 0; x < BOARD_SIZE; x++){
     for(y = 0; y < BOARD_SIZE; y++){            
         var pixel = new Object();  
-        pixel.x = x;
-        pixel.y = y;
-        pixel.size = 25;
+        pixel.x = y; // we can agree to not talk
+        pixel.y = x; // about this part ok
+        pixel.size = 1;
         pixel.color = getpixelColor(gridArray);
         pxon.pxif.pixels[n] = pixel;
         n++;
@@ -1047,7 +1157,7 @@ function paint(x,y,color){
     if(!color){
       color = newDrawColor;
     }
-    draw(gridArray[x][y],color);
+    updatePixel(gridArray[x][y],color);
   }
   return false;
 }
@@ -1061,12 +1171,12 @@ function line(x1,y1,x2,y2,color){
     if(!color){
       color = newDrawColor;
     }
-    
+
     var diffX = x2-x1;
     var diffY = y2-y1;
     for(i = x1; i <= x2; i++){
         console.log("i: " + i);
-        draw(gridArray[i][y2],color);
+        updatePixel(gridArray[i][y2],color);
     }
   }
 }
