@@ -74,6 +74,7 @@
     }
     input,label, button{
       text-transform: lowercase;
+      color: var(--textColor);
     }
     .tools{
       display: flex;
@@ -624,9 +625,7 @@ function updatePxonViewerCheckbox(input){
     pxonOutputPre.style.display = "none";
     copyPxonButton.style.display = "none";
     inputPxonViewerCheckbox.checked = false;
-  }
-  
-  bindClicksForCurrentBoard();
+  }  
 }
 
 // Set up copy pxon button
@@ -847,7 +846,6 @@ function startup() {
     dotBoard.appendChild(dot);
   }
   
-  bindClicksForCurrentBoard();
   
   
   updateDotScale(dotSize);
@@ -860,6 +858,8 @@ function startup() {
   var gridContent = grid.innerHTML;        
   undoStack.push(gridContent);
   
+  bindClicksForCurrentBoard();
+  
   // Save grid
   getCurrentPixels();
   saveState();
@@ -871,7 +871,7 @@ if(document.readyState === "complete" || (document.readyState !== "loading" && !
   console.log("waiting…");
   callback(); 
 } else {
-  console.log("starting up…");
+  console.log("art time");
   document.addEventListener("DOMContentLoaded", startup());
 }
 
@@ -898,6 +898,7 @@ function bindClicksForCurrentBoard(){
     };
     dot.onmouseup = function() {
       pressed = false;
+      updatePXON()
       undoStackAdd();
       updateUndoButton();
       saveState();
@@ -912,47 +913,43 @@ function bindClicksForCurrentBoard(){
   document.onmouseup = function() {
     pressed = false;
   };   
-  
-  
-  
-  
-  /// TOUCH STUFF 
-  
-  var theBoard = document.querySelectorAll("#grid-container .board");
 
-  for(i = 0; i < theBoard.length; i++){
-    theBoard[i].addEventListener('touchstart', function(e){
-      var target = e.target;
-      pressed = true;
-      if(target.classList.contains("dot")){
-        updatePixel(target, newDrawColor);
-      }
-    }, false);
-    
-    theBoard[i].addEventListener('touchmove', e => {
-      var xPos = e.changedTouches[0].pageX;
-      var yPos = e.changedTouches[0].pageY;
-      // get element based on xy coordinates, draw if its a dot
-      var currentlyTouched = document.elementFromPoint(xPos,yPos); 
-      if(currentlyTouched.classList.contains("dot")){
-        updatePixel(currentlyTouched, newDrawColor);
-      }
-    }, { passive: false });
-    
-    theBoard[i].addEventListener('touchend', e => {
-      pressed = false;
-      undoStackAdd();
-      updateUndoButton();
-      saveState();
-    }, { passive: false });
-    
-    theBoard[i].addEventListener('touchcancel', e => {
-      pressed = false;
-      undoStackAdd();
-      updateUndoButton();
-      saveState();
-    }, { passive: false });
-  }
+/// TOUCH STUFF 
+
+  //target the container so we can track touch travel 
+  dotBoard.addEventListener('touchstart', function(e){
+    var target = e.target;
+    pressed = true;
+    if(target.classList.contains("dot")){
+      updatePixel(target, newDrawColor);
+    }
+  }, false);
+  
+  dotBoard.addEventListener('touchmove', e => {
+    var xPos = e.changedTouches[0].pageX;
+    var yPos = e.changedTouches[0].pageY;
+    // get element based on xy coordinates, draw if its a dot
+    var currentlyTouched = document.elementFromPoint(xPos,yPos); 
+    if(currentlyTouched.classList.contains("dot")){
+      updatePixel(currentlyTouched, newDrawColor);
+    }
+  }, { passive: false });
+  
+  dotBoard.addEventListener('touchend', e => {
+    pressed = false;
+    updatePXON()
+    undoStackAdd();
+    updateUndoButton();
+    saveState();
+  }, { passive: false });
+  
+  dotBoard.addEventListener('touchcancel', e => {
+    pressed = false;
+    updatePXON()
+    undoStackAdd();
+    updateUndoButton();
+    saveState();
+  }, { passive: false });
 }
 
       
@@ -967,19 +964,23 @@ function updatePixel(dot, color) {
   }
 }
 
+var prevDot, prevColor;
+
 function draw(dot, color){
-  dot.style.cssText += `--glowColor:` + color + `;--dotColor:` + color + `;background-color: var(--dotColor);z-index:99;`;
-  updatePXON();
+  if (dot != prevDot || color != prevColor){
+    dot.style.cssText += `--glowColor:` + color + `;--dotColor:` + color + `;background-color: var(--dotColor);z-index:99;`;
+    updatePXON();
+  }else{
+    console.log("same dot");
+    return false;
+  }
+  prevDot = dot;
+  prevColor = color
 }
 function erase(dot, color){
   dot.style.cssText = `z-index:1;`;
-  updatePXON();
 }
  
-function updatePXON(){
-  createPXON();
-  document.getElementById("raw").innerText = JSON.stringify(pxon, undefined, 3); 
-} 
  
 //////// UNDO LOGIC 
 
@@ -1105,6 +1106,12 @@ function getCurrentPixels(){
   }
   return gridArray;
 }
+
+
+function updatePXON(){
+  createPXON();
+  document.getElementById("raw").innerHTML = JSON.stringify(pxon, undefined, 3); 
+} 
 
 // Export PXON
 function createPXON(){
