@@ -95,8 +95,8 @@
       border-color: var(--currentNewDrawColor) !important;
       float: right;
     }
-    #c0de{
-      margin: 20px auto;
+    #draw-with-words{
+      margin: 40px auto 20px;
       width: 364px;
       color: var(--currentNewDrawColor) !important;
     }
@@ -236,7 +236,7 @@
         <label for="hide">hide</label>
       </div>
       <div class="check experiment">
-        <input type="checkbox" id="code-editor-checkbox" name="code-editor" >
+        <input type="checkbox" id="code-editor-checkbox" name="code-editor" checked>
         <label for="code-editor">draw with words</label>
       </div>
       <div class="check experiment">
@@ -257,10 +257,9 @@
         </div>
       </div>
     </div>
-    <div id="c0de">
-      <label for="code-editor">draw with words</label>
+    <div id="draw-with-words">
         <p>⚠️ heads up this is just javascript</p>
-        <p>but there are some special functions available like <span class="code">paint(x,y);</span> with coordinates</p>
+        <p>but with extra functions available like <span class="code">paint(x,y);</span> — just replace x and y with coordinates.</p><p> note: the board is 16x16 and starts at 0,0</p>
         <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
           <span class="comment">// try writing paint(0,5);</span>
           <br/>
@@ -582,7 +581,7 @@ inputHideCheckbox.addEventListener(
 inputCodeEditorCheckbox.addEventListener( 
   'change',
   function() {
-      codeEditor = document.getElementById("c0de");
+      codeEditor = document.getElementById("draw-with-words");
     if(this.checked) {
       codeEditor.style.display = "block"
     } else {
