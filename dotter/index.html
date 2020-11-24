@@ -3,9 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name='viewport' 
- content='width=device-width, initial-scale=1.0, maximum-scale=1.0, 
- user-scalable=0'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>dotter</title>
     
     <style>
@@ -16,18 +14,37 @@
         Monaco, Consolas,"Liberation Mono","Courier New", monospace;
         box-sizing: border-box;
     }
+    html{
+      overflow-x: hidden;
+    }
     body {
       font-family: helvetica, arial, sans-serif;
-      height: 100vh;
       margin: 0;
       font-size: 12px;
       background-color: #000;
       transition: background-color .3s ease;
-      padding-bottom: 160px;
       --textColor: white;
+      overflow-x: hidden;
+      display: flex;
+    }
+    
+    .draw-color{
+      color: var(--currentNewDrawColor)
+    }
+    
+    header{
+      
+    }
+    h1{
+      color: var(--currentNewDrawColor);
+      text-transform: lowercase;
+      text-align: center;
     }
     p{
       line-height: 1.5;
+    }
+    #main{
+      flex: 1;
     }
     #export-window{
       z-index: 9999;
@@ -68,14 +85,25 @@
       line-break: normal;
       float: right;
       width: 40%;
-      height: 100vh;
       display: none;
       z-index: 1;
       color: var(--textColor);
       transition: width .2s ease-in-out;
+      border-left: 1px solid rgba(255,255,255,.03);
     }
-    #pxon-panel .pxon-panel-top{
-      height: 40px;
+    #pxon-panel .right-panel-text{
+      padding: 0 20px 20px;
+      margin-top: 50px;
+    }
+    #pxon-panel a{
+      color: white;
+      font-style: italic;
+      position: relative;
+      transition: all .2s ease;
+      bottom:0;
+    }
+    #pxon-panel a:hover{
+      bottom: 2px;
     }
     #raw{
       overflow: hidden;
@@ -87,13 +115,20 @@
     }
     input,label, button{
       text-transform: lowercase;
+      font-size:16px;
       color: var(--textColor);
     }
     .tools{
       display: flex;
-      margin: 20px;
+      margin: 5px;
       padding-bottom: 10px;
       justify-content: space-around;
+      align-items: flex-end;
+      max-width: 500px;
+      margin: 30px auto 20px;
+    }
+    .tools label{
+      display: block
     }
     #grid-container{
       -webkit-touch-callout: none; /* iOS Safari */
@@ -218,8 +253,25 @@
       grid-template-rows: 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px;
       grid-template-columns: 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px 2px;
     }
-    #undo-history .dot{
-
+    #undo-history .dot[style]{
+      box-shadow: none !important;
+    }
+    .before-drawing{
+      display: block;
+      opacity: 1;
+      transition: all .5s ease;
+    }
+    .after-drawing{
+      display: none;
+      opacity: 0;
+      transition: all .5s ease;
+    }
+    @media only screen and (min-width: 600px) {
+      input,label, button{
+        text-transform: lowercase;
+        font-size:14px;
+        color: var(--textColor);
+      }
     }
     </style>
   </head>  
@@ -228,110 +280,126 @@
       <h2>Export your dots to PXON or SVG</h2>
     </div>
     <div class="overlay"></div> -->
+    <div id="main">
+      <header><h1>DOTTER</h1></header>
+      <div id="grid-container" class="board-container"></div>
+      <div class="tools colors">
+        <div id="initial-dot-color-select">
+          <label for="select-color">Initial Dot Color</label>
+          <input type="color" id="initial-dot-color-selected" name="select-initial-dot-color"
+             value="#1f1f1f">
+        </div>
+        <div id="color-select">
+          <label for="select-color">New Dot Color</label>
+          <input type="color" id="color-selected" name="select-color"
+             value="#FFA57D">
+        </div>
+        <div id="background-select">
+          <label for="select-color">Background Color</label>
+          <input type="color" id="background-color-selected" name="select-background-color"
+             value="#19181A">
+        </div>
+      </div>
+      <div class="tools sizing">
+        <div id="select-dot-size" style="width:80px;">
+          <label for="select-dot-size">dot size</label>
+          <input type="number" id="dot-size" name="select-dot-size"
+             value="20" style="width:80px;">
+        </div>
+        <div id="select-dot-radius-amount" style="width:80px;">
+          <label for="select-dot-radius-amount">dot radius</label>
+          <input type="number" id="dot-radius-amount" name="select-dot-radius-amount"
+             value="3" style="width:80px;">
+        </div>
+        <div id="select-grid-gap-size" style="width:80px;">
+          <label for="select-grid-gap-size">grid gap</label>
+          <input type="number" id="grid-gap-size" name="select-grid-gap-size"
+             value="3" style="width:80px;">
+        </div>
+        <div id="select-glow-amount" style="width:60px;">
+          <label for="select-glow-amount">glow</label>
+          <input type="number" id="glow-amount" name="select-glow-amount"
+             value="0" style="width:40px;">
+        </div>
+      </div>
+      <div class="tools-container">
+        <div class="tools modes">
+          <div id="select-draw-erase">
+            <input type="radio" id="select-draw-radio" name="draw-erase-radio" value="draw" / checked>
+            <label for="select-draw-radio">draw</label><br/>
+            <input type="radio" id="select-erase-radio" name="draw-erase-radio" value="erase" />
+            <label for="select-erase-radio">erase</label>
+          </div>
+          <div class="undo">
+            <button id="undo-button" disabled>undo</button>
+          </div>
+          <div class="redo">
+            <button id="redo-button" disabled>redo</button>
+          </div>
+        </div>
+        <div id="more-tools">
+          <div class="check">
+            <input type="checkbox" id="hide-checkbox" name="hide">
+            <label for="hide">hide</label>
+          </div>
+          <div class="check experiment">
+            <input type="checkbox" id="code-editor-checkbox" name="code-editor" checked>
+            <label for="code-editor">draw with words</label>
+          </div>
+          <div class="check experiment">
+            <input type="checkbox" id="enable-pxon-viewer" name="enable-pxon-viewer">
+            <label for="enable-pxon-viewer">PXON viewer</label>
+          </div>
+          <div id="undo-visualizer" class="check experiment">
+            <input type="checkbox" id="enable-undo-visualizer" name="enable-undo-visualizer">
+            <label for="enable-undo-visualizer">undo stack visualizer</label>
+            <div id="undo-tile-scale">
+              <span>(pls disable if slow)</span>
+              <label for="select-undo-tile-scale">&nbsp;&nbsp; scale</label>
+              <input type="number" id="select-undo-tile-scale" name="select-undo-tile-scale" value="2" style="width:40px;">
+            </div>
+            <div id="undo-tile-gap">
+              <label for="select-undo-tile-gap">&nbsp;&nbsp; gap</label>
+              <input type="number" id="select-undo-tile-gap" name="select-undo-tile-gap" value="0" style="width:40px;">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="draw-with-words">
+          <p><span style="font-size:12px">⚠️</span> heads up this is just javascript</p>
+          <p>but also with extra functions available.</p><p>like <span class="code">paint(<b>x</b>,<b>y</b>);</span></p><p>just replace <b>x</b> and <b>y</b> with coordinates. (note: the board is 16x16 and begins at 0,0!)</p>
+          <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
+            <span class="comment">// try writing paint(0,5);</span>
+            <br/>
+          <div></div>
+        </code>
+        <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
+      </div>
+    </div>
     <div id="pxon-panel">
       <div class="pxon-panel-top">
         <div id="pxon-scale">
           <label for="select-pxon-scale">pxon scale:</label>
           <input type="number" id="select-pxon-scale" value="1" style="width:40px;"/>
         </div>
+        <div class="right-panel-text">
+          <div class="before-drawing">
+            <p>first, you must draw.</p>
+          </div>
+          <div class="after-drawing">
+            <p><b class="draw-color">CONGRATS</b></p>
+            <p>You've made <a href="http://jennmoney.biz/pxon">PXON</a>.</p>
+            <p>The text below is editable. you'll find copy and download buttons above and to the right.</p>
+            <p>Adjust the scale of your pxon, if you'd like!</p>
+          </div>
+        </div>
         <button id="copy-pxon">copy</button>
       </div>
       <textarea id="raw"></textarea>
     </div>
-    <div class="tools">
-      <div id="initial-dot-color-select">
-        <label for="select-color">Initial Dot Color</label>
-        <input type="color" id="initial-dot-color-selected" name="select-initial-dot-color"
-           value="#1f1f1f">
-      </div>
-      <div id="color-select">
-        <label for="select-color">New Dot Color</label>
-        <input type="color" id="color-selected" name="select-color"
-           value="#FFA57D">
-      </div>
-      <div id="background-select">
-        <label for="select-color">Background Color</label>
-        <input type="color" id="background-color-selected" name="select-background-color"
-           value="#19181A">
-      </div>
-    </div>
-    <div class="tools">
-      <div id="select-dot-size" style="width:80px;">
-        <label for="select-dot-size">dot size</label>
-        <input type="number" id="dot-size" name="select-dot-size"
-           value="20" style="width:80px;">
-      </div>
-      <div id="select-dot-radius-amount" style="width:80px;">
-        <label for="select-dot-radius-amount">dot radius</label>
-        <input type="number" id="dot-radius-amount" name="select-dot-radius-amount"
-           value="3" style="width:80px;">
-      </div>
-      <div id="select-grid-gap-size" style="width:80px;">
-        <label for="select-grid-gap-size">grid gap</label>
-        <input type="number" id="grid-gap-size" name="select-grid-gap-size"
-           value="3" style="width:80px;">
-      </div>
-      <div id="select-glow-amount" style="width:60px;">
-        <label for="select-glow-amount">glow</label>
-        <input type="number" id="glow-amount" name="select-glow-amount"
-           value="0" style="width:40px;">
-      </div>
-      <div id="select-draw-erase">
-        <input type="radio" id="select-draw-radio" name="draw-erase-radio" value="draw" / checked>
-        <label for="select-draw-radio">draw</label><br/>
-        <input type="radio" id="select-erase-radio" name="draw-erase-radio" value="erase" />
-        <label for="select-erase-radio">erase</label>
-      </div>
-      <div class="undo">
-        <button id="undo-button" disabled>undo</button>
-      </div>
-      <div class="redo">
-        <button id="redo-button" disabled>redo</button>
-      </div>
-    </div>
-    <div id="grid-container" class="board-container">
-    </div>
-    <div id="more-tools">
-      <div class="check">
-        <input type="checkbox" id="hide-checkbox" name="hide">
-        <label for="hide">hide</label>
-      </div>
-      <div class="check experiment">
-        <input type="checkbox" id="code-editor-checkbox" name="code-editor" checked>
-        <label for="code-editor">draw with words</label>
-      </div>
-      <div class="check experiment">
-        <input type="checkbox" id="enable-pxon-viewer" name="enable-pxon-viewer">
-        <label for="enable-pxon-viewer">PXON viewer</label>
-      </div>
-      <div id="undo-visualizer" class="check experiment">
-        <input type="checkbox" id="enable-undo-visualizer" name="enable-undo-visualizer">
-        <label for="enable-undo-visualizer">undo stack visualizer</label>
-        <div id="undo-tile-scale">
-          <span>(pls disable if slow)</span>
-          <label for="select-undo-tile-scale">&nbsp;&nbsp; scale</label>
-          <input type="number" id="select-undo-tile-scale" name="select-undo-tile-scale" value="2" style="width:40px;">
-        </div>
-        <div id="undo-tile-gap">
-          <label for="select-undo-tile-gap">&nbsp;&nbsp; gap</label>
-          <input type="number" id="select-undo-tile-gap" name="select-undo-tile-gap" value="0" style="width:40px;">
-        </div>
-      </div>
-    </div>
-    <div id="draw-with-words">
-        <p><span style="font-size:12px">⚠️</span> heads up this is just javascript</p>
-        <p>but also with extra functions available.</p><p>like <span class="code">paint(<b>x</b>,<b>y</b>);</span></p><p>just replace <b>x</b> and <b>y</b> with coordinates. (note: the board is 16x16 and begins at 0,0!)</p>
-        <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
-          <span class="comment">// try writing paint(0,5);</span>
-          <br/>
-        <div></div>
-      </code>
-      <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
-    </div>
-    <script>
     
     
-
+<script>
 
 var gridContainer,
   undoStack = [],
@@ -344,7 +412,8 @@ var gridContainer,
   dotBoard,
   dotCount,
   currentTool,
-  pxonScale = 10,
+  hasDrawnSwitch = false,
+  pxonScale = 1,
   dot,
   i,
   color,
@@ -365,7 +434,7 @@ var inputInitialDotColor = document.getElementById("initial-dot-color-selected")
   inputDrawEraseRadio = document.getElementById("draw"),
   inputHideCheckbox = document.getElementById("hide-checkbox"),
   inputPxonViewerCheckbox = document.querySelector("input[name=enable-pxon-viewer]"),
-  inputPxonScale = document.getElementById("pxon-scale")
+  inputPxonScale = document.getElementById("select-pxon-scale")
   inputCodeEditorCheckbox = document.getElementById("code-editor-checkbox")
   inputUndoVisualizerCheckbox = document.querySelector("input[name=enable-undo-visualizer]"),
   inputUndoVisualizerScaleContainer = document.getElementById("undo-tile-scale"),
@@ -649,6 +718,21 @@ inputPxonViewerCheckbox.addEventListener(
 );
 
 
+// Bind & handle changes on PXON VIEWER CHECKBOX
+inputPxonScale.addEventListener( 
+  'change',
+  function() {
+    updatePxonScale(inputPxonScale.value);
+  }
+);
+
+function updatePxonScale(number){
+  pxonScale = number;
+  console.log(pxonScale);
+  updatePXON();
+}
+
+
 function updatePxonViewerCheckbox(input){
   pxonContainer = document.getElementById("pxon-panel");
   if(input){
@@ -791,9 +875,7 @@ inputUndoVisualizerGap.addEventListener("input", function() {
 var inputCodeSubmitButton = document.getElementById("submit-code-button");
 inputCodeSubmitButton.addEventListener("click", function(){
   code = document.getElementsByTagName("code");
-  console.log(code[0].textContent);
   userCode = code[0].textContent;
-  console.log(userCode);
   eval(userCode);
 });
       
@@ -1152,8 +1234,24 @@ function updatePXON(){
   createPXON();
   pxonClean = JSON.stringify(pxon, undefined, 3)
   document.getElementById("raw").innerHTML = pxonClean; 
+  hasDrawn(hasDrawnSwitch)
 } 
 
+function hasDrawn(toggle){
+  if(toggle == false){
+    var beforeText = document.querySelectorAll(".before-drawing");
+    var afterText = document.querySelectorAll(".after-drawing");  
+    if(beforeText[0] && afterText[0]){
+      beforeText[0].style.opacity = 0;
+      afterText[0].style.display = "block";
+      setTimeout(function(){
+        beforeText[0].style.display = "none";
+        afterText[0].style.opacity = 1;
+      }, 500);
+    }
+    hasDrawnSwitch = true 
+  }
+}
 // Export PXON
 function createPXON(){
   var gridArray = getCurrentPixels();
@@ -1198,9 +1296,14 @@ function createPXON(){
   return pxon;
 }
       
+      
+      
+      
+/////// API 
+      
 function paint(x,y,color){
   if( x.isNaN && y.isNaN ){
-    console.log("both x and y coordinates need to be defined")
+    console.log("both x and y coordinates need to be defined, and should be numbers!");
   } else{
     if(!color){
       color = newDrawColor;
@@ -1209,7 +1312,6 @@ function paint(x,y,color){
   }
   return false;
 }
-
 
 function line(x1,y1,x2,y2,color){
   if( x1.isNaN && y1.isNaN && x2.isNaN && y2.isNaN ){
@@ -1276,7 +1378,6 @@ function render(pxon, container) {
 
   container.appendChild(el);
 }
-
 function dunno(thiswasntinafunction){
   
   const input = document.getElementById('input');
