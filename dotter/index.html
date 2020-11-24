@@ -126,7 +126,7 @@
     #draw-with-words{
       margin: 40px auto 20px;
       width: 364px;
-      color: var(--currentNewDrawColor) !important;
+      color: var(--textColor);
     }
     code{
       width: 364px;
@@ -298,8 +298,8 @@
       </div>
     </div>
     <div id="draw-with-words">
-        <p>⚠️ heads up this is just javascript</p>
-        <p>but with extra functions available like <span class="code">paint(x,y);</span> — just replace x and y with coordinates.</p><p> note: the board is 16x16 and starts at 0,0</p>
+        <p><span style="font-size:12px">⚠️</span> heads up this is just javascript</p>
+        <p>but also with extra functions available.</p><p>like <span class="code">paint(<b>x</b>,<b>y</b>);</span></p><p>just replace <b>x</b> and <b>y</b> with coordinates. (note: the board is 16x16 and begins at 0,0!)</p>
         <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
           <span class="comment">// try writing paint(0,5);</span>
           <br/>
@@ -641,7 +641,7 @@ copyPxonButton.addEventListener("click", function(){
     copyPxonButton.innerText = "successfully copied!";
     setTimeout(function(){
       copyPxonButton.innerText = "copy again";
-    }, 2000);
+    }, 1500);
   } catch(err) {
     alert('failed to copy. ☹️ … ' + err);
   }
