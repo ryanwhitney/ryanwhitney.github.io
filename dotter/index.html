@@ -533,8 +533,8 @@ function updateGlowRadius(amount){
   }
   var dots = document.querySelectorAll(".dot");
   dots.forEach(item => 
-    item.style.cssText += `box-shadow: 0 0 ` + amount + `px  var(--dotColor),
-         0 0 ` + amount + `px  var(--dotColor);`
+    item.style.cssText += `box-shadow: 0 0 ` + amount + `px  var(--glowColor),
+         0 0 ` + amount + `px  var(--glowColor);`
   );
   // update variable
   glowRadius = amount;
@@ -740,9 +740,6 @@ function startup() {
   updateInitialDotColor(initialDotColor);
   updateBackgroundColor(backgroundColor);
   updateNewDrawColor(newDrawColor);
-  updateDotScale(dotSize);
-  updateDotRadius(dotRadius);
-  updateGlowRadius(glowRadius);
 
   // CREATE BOARD
   gridContainer = document.getElementById('grid-container');
@@ -758,6 +755,12 @@ function startup() {
   }
   
   bindClicksForCurrentBoard();
+  
+  
+  updateDotScale(dotSize);
+  updateDotRadius(dotRadius);
+  updateGlowRadius(glowRadius);
+  
   
   // ADD INITIAL STATE TO UNDO STACK
   grid = document.getElementById('grid-container');
@@ -816,7 +819,7 @@ function bindClicksForCurrentBoard(){
       
 // WHAT HAPPENS WHEN A DOT IS CLICKED
 function draw(dot, color) {
-  dot.style.cssText += `--dotColor:` + color + `;background-color: var(--dotColor);z-index:99999;`;
+  dot.style.cssText += `--glowColor:` + color + `;--dotColor:` + color + `;background-color: var(--dotColor);z-index:99999;`;
   createPXON();
   document.getElementById("raw").innerHTML = JSON.stringify(pxon, null, 3); 
 }
