@@ -66,6 +66,7 @@
     }
     #grid-container .board{
       margin: auto;
+      touch-action: none;
     }
     .board-container{
       display: flex;
@@ -221,6 +222,12 @@
         <input type="number" id="glow-amount" name="select-glow-amount"
            value="0" style="width:40px;">
       </div>
+      <div id="select-draw-erase">
+        <input type="radio" id="select-draw-radio" name="draw-erase" value="draw" / checked>
+        <label for="select-draw-radio">draw</label><br/>
+        <input type="radio" id="select-erase-radio" name="draw-erase" value="erase" />
+        <label for="select-erase-radio">erase</label>
+      </div>
       <div class="undo">
         <button id="undo-button" disabled>undo</button>
       </div>
@@ -275,7 +282,7 @@
 var gridContainer,
   undoStack = [],
   gridArray = [],
-  grid,
+  gridContainer = document.getElementById('grid-container'),
   undoPresses = 0,
   undoCount = 0,
   undoButton = document.getElementById("undo-button"),
@@ -773,8 +780,8 @@ function startup() {
 
 };
 
+startup();
 
-startup();   
       
 //////// BIND CLICKS TO ACTIVE BOARD PIXELS
 
@@ -811,7 +818,47 @@ function bindClicksForCurrentBoard(){
   // In case mouse leaves board while pressed
   document.onmouseup = function() {
     pressed = false;
-  };
+  };   
+  
+  
+  
+  
+  /// TOUCH STUFF 
+  
+  var theBoard = document.querySelectorAll("#grid-container .board");
+
+  theBoard[0].addEventListener('touchstart', function(e){
+    var target = e.target;
+    pressed = true;
+    if(target.classList.contains("dot")){
+      draw(target, newDrawColor);
+    }
+  }, false);
+  
+  theBoard[0].addEventListener('touchmove', e => {
+    var xPos = e.changedTouches[0].pageX;
+    var yPos = e.changedTouches[0].pageY;
+    // get element based on xy coordinates, draw if its a dot
+    var currentlyTouched = document.elementFromPoint(xPos,yPos); 
+    if(currentlyTouched.classList.contains("dot")){
+      draw(currentlyTouched, newDrawColor);
+    }
+  }, { passive: false });
+  
+  theBoard[0].addEventListener('touchend', e => {
+    pressed = false;
+    undoStackAdd();
+    updateUndoButton();
+    saveState();
+  }, { passive: false });
+  
+  theBoard[0].addEventListener('touchcancel', e => {
+    pressed = false;
+    undoStackAdd();
+    updateUndoButton();
+    saveState();
+  }, { passive: false });
+  
 }
 
       
@@ -831,9 +878,8 @@ function undoStackAdd(){
   // console.log("undocount: " + undoCount);
   
   // ADD A CLONE OF THE GRID TO AN ARRAY
-  grid = document.getElementById('grid-container');
-  grid.firstElementChild.className = "board board" + undoStack.length;
-  var gridContent = grid.innerHTML;
+  gridContainer.firstElementChild.className = "board board" + undoStack.length;
+  var gridContent = gridContainer.innerHTML;
 
   undoStack.push(gridContent);
   
