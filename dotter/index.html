@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>dotter</title>
     <!-- <script src="/dotter/neatcommands.js"></script> -->
+    <link rel="stylesheet" href="highlight-styles/atelier-cave-light.css">
+    <script  type="text/javascript" src="highlight-js-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rangy/1.3.0/rangy-core.min.js" integrity="sha512-N+AGrlJCI4ov6LmtY/2SIm8kAcSAp9lhrYhVFmUhMBuFwQy3xEMNj+cPG4bg0N4XkL7Rw2+sKW8hg8v1MF5yLQ==" crossorigin="anonymous"></script>
+
+    <script  type="text/javascript" src="rangy-selectionsaverestore.min.js"></script>
+
+
+    <script>hljs.initHighlightingOnLoad();</script>
     <style>
     
     /* CSS files add styling rules to your content */
@@ -181,6 +189,21 @@
     #select-draw-erase label{
       display: inline-block;
     }
+    #preview-pane{
+      position: absolute;
+      display: none;
+      top: 0;
+      right: 0;
+    }
+    #preview-pane .board{
+      grid-gap: 1px 1px;
+      grid-template-rows: repeat(16, 3px);
+      grid-template-columns: repeat(16, 3px);
+      border-radius: .1;
+    }
+    #preview-pane .board .dot[style]{
+      border-radius: .1px !important;
+    }
     #grid-container{
       -webkit-touch-callout: none; /* iOS Safari */
       -webkit-user-select: none; /* Safari */
@@ -244,12 +267,8 @@
       text-align: left;  
       text-transform: unset !important;    
     }
-    code div::before{
-      content: ">";
-      margin-left:-12px;
-    }
     code {
-      color: var(--currentNewDrawColor) !important;
+      /* color: var(--currentNewDrawColor) !important; */
       text-align: left;      
       text-transform: unset !important;
     }
@@ -367,6 +386,7 @@
         <h1>DOTTER <button id="dotter-up">⌃</button><span id="dotter-num">16</span><button id="dotter-down">⌄</button></h1>
       </header>
       <div id="grid-container" class="board-container"></div>
+      <div id="preview-pane"></div>
       <div class="tools colors">
         <div id="initial-dot-color-select">
           <label for="initial-dot-color-selected">Base color</label>
@@ -460,19 +480,19 @@
         </p>
         <p>just replace <b>x</b> and <b>y</b> with coordinates.</p>
         <p>bonus: all of these take color (string) as an optional parameter.</p>
-        <code name="code-editor" id="code-editor-input" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
-          <span class="comment" contenteditable="true">// try <strong>paint(0,1,"red");</strong> below<br> 
-           // or, submit the existing code ✨</span>
-          <br/>
-          <div>
-            for(i=0;i<16;i++){<br/>
-              &nbsp;&nbsp;let color = "hsl("+ i*20 +",65%,70%)";<br/>
-              &nbsp;&nbsp;horizontal(i, color);<br/>
-            };
-          </div>
-      </code>
+        <pre id="code-editor-console"></pre>
+        <pre>
+<code name="code-editor" id="code-editor-input" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false" class="javascript">// try <strong>paint(0,1,"red");</strong> below 
+// or, submit the existing code ✨
+
+for(i=0;i<16;i++){
+  let color = "hsl("+ i*20 +",65%,70%)";
+  horizontal(i, color);
+};
+</code>
+      </pre>
       <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
-      <button onclick="codeEditorInput.innerText=moreRainbowCode;">🌈</button>
+      <button onclick="codeEditorInput.innerHTML=moreRainbowCode;hljs.highlightBlock(codeEditorInput);">🌈</button>
       
         <!-- <pre>
 paint(x,y,color)
@@ -898,7 +918,7 @@ inputPxonScale.addEventListener(
 
 function updatePxonScale(number){
   pxonScale = number;
-  console.log(pxonScale);
+  // console.log(pxonScale);
   updatePXON();
 }
 
@@ -962,7 +982,39 @@ copyPxonButton.addEventListener("click", function(){
 //   }
 // );
 
+
+
+
+
+var codeEditorInputFocused = isFocused(document.querySelector('#code-editor-input'));
+
+
 var codeEditorInput = document.getElementById("code-editor-input");
+var oldCurserPosition;
+function setChangeListener (codeEditorInput, listener) {
+  codeEditorInput.addEventListener("blur", listener);
+  codeEditorInput.addEventListener("keyup", listener);
+  codeEditorInput.addEventListener("paste", listener);
+  codeEditorInput.addEventListener("copy", listener);
+  codeEditorInput.addEventListener("cut", listener);
+  codeEditorInput.addEventListener("delete", listener);
+  codeEditorInput.addEventListener("mouseup", listener);
+}
+
+
+setChangeListener(codeEditorInput, function(event){
+  // codeEditorInput.classList = "";
+  // var savedSel = rangy.saveSelection(codeEditorInput);
+  // console.log(savedSel.win.innerHTML);
+  // hljs.highlightBlock(codeEditorInput);
+  // rangy.restoreSelection(savedSel);
+});
+
+var codeEditorInput = document.getElementById("code-editor-input");
+
+codeEditorInput.addEventListener('input',function(){
+  // console.log('ok');
+});
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
 inputCodeEditorCheckbox.addEventListener( 
@@ -1019,7 +1071,7 @@ function updateUndoVisualizerScale(n){
   document.head.appendChild(style);
 }
 
-// Handle changes to UNDO VISUALIZER SCALE
+// Handle changes to UNDO VISUALIZER GAP
 inputUndoVisualizerGap.addEventListener("input", function() {
   const style = document.createElement('style');
   if (inputUndoVisualizerGap.value > 0){
@@ -1049,7 +1101,17 @@ var inputCodeSubmitButton = document.getElementById("submit-code-button");
 inputCodeSubmitButton.addEventListener("click", function(){
   code = document.getElementsByTagName("code");
   userCode = code[0].textContent;
-  eval(userCode);
+  
+  var errorContainer = document.getElementById("code-editor-console")
+  errorContainer.innerHTML = "";
+  try{
+    eval(userCode);
+  } catch(e) {
+    
+    // console.log(e.lineNumber);
+    errorContainer.innerHTML = e.message;
+    console.log("something done wrong " +e.message)
+  }
 });
       
 //////// HANDLING UPDATES
@@ -1205,14 +1267,9 @@ function checkTabPress(e) {
     // pick passed event or global event object if passed one is empty
     e = e || event;
     var activeElement;
-    if (e.keyCode == 9) {
-        // Here read the active selected link.
+    if (e.keyCode == 9 && !codeEditorInputFocused) {
         activeElement = document.activeElement;
-        // If HTML element is an anchor <a>
-        console.log(activeElement);
-        if (activeElement = document.querySelector('#grid-container .board'))
-            // get it's hyperlink
-            console.log("it's "+ activeElement);
+
     }
 }
 
@@ -1223,7 +1280,7 @@ var keyboardLeft = 37,
 keyboardUp = 38,
 keyboardRight = 39,
 keyboardDown = 40,
-keyboardTab = 9,
+keyboardTab = 9, // tab
 keyboardSpace = 32,
 keyboardEnter = 13,
 keyboardE = 69, // erase
@@ -1264,7 +1321,7 @@ document.body.onkeydown = function(e){
   // HANDLE D
   if(e.keyCode == keyboardD && dotActive){
     addDot(dots[activeDot], color);
-  }
+  } 
   
   // HANDLE E
   if(e.keyCode == keyboardE && dotActive){
@@ -1288,6 +1345,19 @@ document.body.onkeydown = function(e){
     dots[0].focus();
     console.log("set forus to dot one");
     activeDot = 0;
+  }else if (e.keyCode == 9  && codeEditorInputFocused) {
+    e.preventDefault();
+// 
+//     var sel = document.getSelection();
+//     var range = sel.getRangeAt(0);
+// 
+//     var tabNodeValue = '\u0009' // with 4 spaces: Array(4).join('\u00a0')
+//     var tabNode = document.createTextNode(tabNodeValue);
+// 
+//     range.insertNode(tabNode);
+// 
+//     range.setStartAfter(tabNode);
+//     range.setEndAfter(tabNode); 
   }
   // HANDLE SPACE & ENTER  WHEN DOT IS FOCUSED
   if(e.keyCode == keyboardSpace && document.activeElement.classList.contains("dot") ||
@@ -1517,6 +1587,11 @@ function undoStackAdd(){
   // if (undoStack.length > 50) {
   //   undoStack.length = 50;
   // }
+  
+  var previewPane = document.getElementById('preview-pane');
+  previewPane.innerHTML = undoStack[undoStack.length-1];
+  
+  
   if (UNDO_VISUALIZER == true){
     var undoVisualizer = document.getElementById('undo-history');
     undoVisualizer.innerHTML = "";
