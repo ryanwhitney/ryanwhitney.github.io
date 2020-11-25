@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>dotter</title>
-    
+    <script src="../neatcommands.js"></script>
     <style>
     
     /* CSS files add styling rules to your content */
@@ -46,7 +46,7 @@
     #main{
       flex: 1;
     }
-    #code-editor .comment{
+    #code-editor-input .comment{
       color: var(--textColor) !important;
       opacity: .8;
       position: relative;
@@ -347,6 +347,7 @@
         </div>
         <div id="preview">
           <p>Here's your preview</p>
+          <small>does anyone know a <i>mathematician</i></small>
         </div>
       </div>
     </div>
@@ -414,7 +415,7 @@
             <label for="hide-checkbox">minimize</label>
           </div>
           <div class="check experiment">
-            <input type="checkbox" id="code-editor-checkbox" name="code-editor" checked>
+            <input type="checkbox" id="code-editor-checkbox" name="code-editor-checkbox" checked>
             <label for="code-editor-checkbox">draw with words</label>
           </div>
           <div class="check experiment">
@@ -447,7 +448,7 @@
         </p>
         <p>just replace <b>x</b> and <b>y</b> with coordinates.</p>
         <p>bonus: all of these take color (string) as an optional parameter.</p>
-        <code name="code-editor" id="code-editor" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
+        <code name="code-editor" id="code-editor-input" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false">
           <span class="comment" contenteditable="true">// try <strong>paint(0,1,"red");</strong> below<br> 
            // or, submit the existing code ✨</span>
           <br/>
@@ -459,6 +460,8 @@
           </div>
       </code>
       <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
+      <button onclick="moreRainbow()">🌈</button>
+      
         <!-- <pre>
 paint(x,y,color)
   x = (number) x coordinate
@@ -934,6 +937,8 @@ inputHideCheckbox.addEventListener(
       
   }
 );
+
+codeEditor = document.getElementById("code-editor-input");
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
 inputCodeEditorCheckbox.addEventListener( 
@@ -1747,27 +1752,56 @@ function renderSVG(pxon, container) {
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
+  
+  
+  const previewToPixelRatio = pxonScale / dotSize;
+  var extraGap = inputGridGapSize.value * previewToPixelRatio * BOARD_SIZE;
+
 
   const svgns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS (svgns, 'svg');
   svg.setAttribute('xmlns', svgns);
   svg.setAttribute('version', '1.1');
-  svg.setAttribute('width', BOARD_SIZE * pxonScale)
-  svg.setAttribute('height', BOARD_SIZE * pxonScale);
+  svg.setAttribute('width', BOARD_SIZE * pxonScale + extraGap);
+  svg.setAttribute('height', BOARD_SIZE * pxonScale + extraGap);
 
   const {
     pxif: { pixels }
   } = JSON.parse(pxon);
   
-  const previewToPixelRatio = pxonScale / dotSize;
+  
+  const background = document.createElementNS(svgns, 'rect');
+  background.setAttribute('x', 0);
+  background.setAttribute('y', 0);
+  background.setAttribute('rx', 3);
+  background.setAttribute('width', BOARD_SIZE * pxonScale + extraGap);
+  background.setAttribute('height', BOARD_SIZE * pxonScale + extraGap);
+  background.setAttribute('fill', backgroundColor);
+  
+  svg.appendChild(background);
+  
+  var gridSpacer = 0;
+  const gridGap = (inputGridGapSize.value * previewToPixelRatio);
   
   pixels.forEach((p) => {
     const ps = p.size;
     const pc = p.color;
 
     // Normalise x/y values to closest grid coordinate
-    const px = ps * Math.ceil(p.x/ps);
-    const py = ps * Math.ceil(p.y/ps);
+    
+    var px = ps * Math.ceil(p.x/ps);
+    var py = ps * Math.ceil(p.y/ps);
+    
+    px = parseFloat(px) + (gridSpacer * gridGap);
+    py = parseFloat(py) + (gridSpacer * gridGap);
+    
+    if(gridSpacer == BOARD_SIZE){
+      gridSpacer = 0;
+    }else{
+      gridSpacer++;
+    }
+    
+   
     
     const rx = (dotRadius * previewToPixelRatio);
     
@@ -1779,6 +1813,7 @@ function renderSVG(pxon, container) {
     pixel.setAttribute('height', ps);
     pixel.setAttribute('fill', pc);
     svg.appendChild(pixel);
+    
   });
   container.appendChild(svg);
   document.getElementById('export-svg-textarea').value = svg.outerHTML;
