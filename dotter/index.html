@@ -189,6 +189,8 @@
           -ms-user-select: none; /* Internet Explorer/Edge */
               user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
       margin-bottom: 10px;
+      opacity: 1;
+      transform: scale3d(1,1,1);
     }
     #grid-container .board{
       margin: auto;
@@ -261,16 +263,11 @@
     }
     #more-tools{
       display: flex;
-      flex-direction: column;
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      z-index: 9999;
+      align-items: flex-start;
+      text-align: center;
     }
-    #more-tools input,
     #more-tools label{
-      background-color: rgba(0,0,0,.2);
-      
+      display: block;
     }
     #undo-visualizer * {
       display: inline-block;
@@ -345,6 +342,7 @@
     </style>
   </head>  
   <body>
+    <button onclick="clearBoard();" style="position: absolute;top:10;left:10;">clear</button>
     <div id="export-window">
       <h2>Export your dots to PXON or SVG</h2>
       <button id="close-export-modal">close this</button>
@@ -423,11 +421,11 @@
             <button id="open-save-export-button">save/export</button>
           </div>
         </div>
-        <div id="more-tools">
-          <div class="check">
+        <div id="more-tools" class="tools">
+          <!-- <div class="check">
             <input type="checkbox" id="hide-checkbox" name="hide">
             <label for="hide-checkbox">minimize</label>
-          </div>
+          </div> -->
           <div class="check experiment">
             <input type="checkbox" id="code-editor-checkbox" name="code-editor-checkbox" checked>
             <label for="code-editor-checkbox">draw with words</label>
@@ -440,7 +438,7 @@
             <input type="checkbox" id="enable-undo-visualizer" name="enable-undo-visualizer">
             <label for="enable-undo-visualizer">undo stack visualizer</label>
             <div id="undo-tile-scale">
-              <span>(pls disable if slow)</span>
+              <span>(🚧 disable if slow)</span>
               <label for="select-undo-tile-scale">&nbsp;&nbsp; scale</label>
               <input type="number" id="select-undo-tile-scale" name="select-undo-tile-scale" value="2" style="width:40px;">
             </div>
@@ -944,25 +942,25 @@ copyPxonButton.addEventListener("click", function(){
   }
 
 })
-
-// Bind & handle changes on PXON VIEWER CHECKBOX
-inputHideCheckbox.addEventListener( 
-  'change',
-  function() {
-    var otherCheckBoxes = document.querySelectorAll("#more-tools .experiment");
-    if(this.checked) {
-      otherCheckBoxes.forEach(element =>
-        element.style.display = "none"
-      );
-    } else {
-      otherCheckBoxes.forEach(element =>
-        element.style.display = "block"
-      );
-    }
-      
-      
-  }
-);
+// 
+// // Bind & handle changes on PXON VIEWER CHECKBOX
+// inputHideCheckbox.addEventListener( 
+//   'change',
+//   function() {
+//     var otherCheckBoxes = document.querySelectorAll("#more-tools .experiment");
+//     if(this.checked) {
+//       otherCheckBoxes.forEach(element =>
+//         element.style.display = "none"
+//       );
+//     } else {
+//       otherCheckBoxes.forEach(element =>
+//         element.style.display = "unset"
+//       );
+//     }
+//       
+//       
+//   }
+// );
 
 var codeEditorInput = document.getElementById("code-editor-input");
 
@@ -1122,9 +1120,37 @@ function updateBackgroundColor(color){
   return color;
 }      
       
+      
+function clearBoard() {
+  if(gridContainer){
+    var dots = document.querySelectorAll(".dot");
+    gridContainer.style.transition = "all 1s ease"
+    dots.forEach(item => 
+      item.style.transition = "all .6s ease"
+    );
+    dots.forEach(item => 
+      item.style.cssText += `box-shadow: 0 0 ` + 80 + `px  var(--glowColor),
+           0 0 ` + 80 + `px  var(--glowColor);`
+    );
+    setTimeout(function(){
+      dots.forEach(item => 
+        item.style.cssText += `box-shadow: 0 0 ` + 0 + `px  var(--glowColor),
+             0 0 ` + 0 + `px  var(--glowColor);`
+      );
+      gridContainer.style.opacity = 0;
+      setTimeout(function(){
+        gridContainer.innerHTML = "";
+        gridContainer.style.transition = "opacity .2s ease";
+        gridContainer.style.transform = "scale3d(1,1,1)"
+        gridContainer.style.opacity = 1;
+        startup();
+      }, 1000);
+    }, 600);
+  }
+}
 //////// START UP   
 function startup() {
-  if (gridContainer){
+  if(gridContainer){
     gridContainer.innerHTML = "";
   }
   // loadState();
