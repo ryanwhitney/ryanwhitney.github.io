@@ -40,6 +40,18 @@
       text-transform: lowercase;
       text-align: center;
     }
+    #dotter-num{
+      font-size: 19px;
+      font-weight: 100;
+      position: relative;
+      top: -.5px;
+    }
+    header button{
+      font-size: 19px;
+      font-weight: 100;
+      position: relative;
+      top: -4px;
+    }
     p{
       line-height: 1.5;
     }
@@ -353,7 +365,9 @@
     </div>
     <div id="overlay-backdrop" class="overlay"></div>
     <div id="main">
-      <header><h1>DOTTER</h1></header>
+      <header>
+        <h1>DOTTER <button id="dotter-up">⌃</button><span id="dotter-num">16</span><button id="dotter-down">⌄</button></h1>
+      </header>
       <div id="grid-container" class="board-container"></div>
       <div class="tools colors">
         <div id="initial-dot-color-select">
@@ -863,6 +877,18 @@ inputPxonViewerCheckbox.addEventListener(
   }
 );
 
+var dotterNumButtons = document.querySelectorAll("header button");
+
+dotterNumButtons[0].addEventListener('click',function(){
+  BOARD_SIZE++;
+  document.getElementById('dotter-num').innerHTML = BOARD_SIZE;
+  startup();
+})
+dotterNumButtons[1].addEventListener('click',function(){
+  BOARD_SIZE--;
+  document.getElementById('dotter-num').innerHTML = BOARD_SIZE;
+  startup();
+})
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
 inputPxonScale.addEventListener( 
@@ -1098,6 +1124,9 @@ function updateBackgroundColor(color){
       
 //////// START UP   
 function startup() {
+  if (gridContainer){
+    gridContainer.innerHTML = "";
+  }
   // loadState();
   updateInitialDotColor(initialDotColor);
   updateBackgroundColor(backgroundColor);
@@ -1719,7 +1748,6 @@ function square(x1,y1,x2,y2,color){
   if(!color){
     color = newDrawColor;
   }
-
   //do a switcharoo in case latter coordinates are closer to 0,0
   if(x1 > x2){
     let oldValHolder = x1; x1 = x2; x2 = oldValHolder;
@@ -1727,7 +1755,6 @@ function square(x1,y1,x2,y2,color){
   if(y1 > y2){
     let oldValHolder = y1; y1 = y2; y2 = oldValHolder;
   }
-  
   //draw rows to fill in the square
   for(xAxis = x1; xAxis <= x2; xAxis++){
     for(yAxis = y1; yAxis <= y2; yAxis++){
@@ -1736,9 +1763,11 @@ function square(x1,y1,x2,y2,color){
     }
   }
   undoStackAdd();
-
 }
 
+function line(x1,y1,x2,y2,color){
+
+};
 
 
 //// PXON TO SVG
