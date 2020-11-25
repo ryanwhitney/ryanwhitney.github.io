@@ -189,6 +189,9 @@
     #select-draw-erase label{
       display: inline-block;
     }
+    #preview {
+      flex: unset;
+    }
     #preview #svg-output{
       border: 1px solid var(--bgColor);
       background-color: var(--bgColor);
@@ -1818,7 +1821,7 @@ function coordinateWithinBounds(coordinate){
 
 
 const userAction = async (lat,long) => {
-  const response = await fetch('api.openweathermap.org/data/2.5/weather?lat='+ lat +'&lon='+ lon +'&appid=7344561ed803b9ed553bc94f1e0b6c72');
+  const response = await fetch('api.openweathermap.org/data/2.5/weather?lat='+ lat +'&lon='+ long +'&appid=7344561ed803b9ed553bc94f1e0b6c72');
   const myJson = await response.json(); //extract JSON from the http response
   console.log(JSON.stringify(myJson,undefined, 3));
 }
