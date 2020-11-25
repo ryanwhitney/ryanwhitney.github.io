@@ -17,7 +17,7 @@ function moreRainbow(){
   moreRainbow();
 };
 
-const moreRainbowCode = "
+const moreRainbowCode = `
 function moreRainbow(){
     for(i=0;i<16;i++){
     let color = "hsl("+ i*20 +",65%,70%)";
@@ -33,4 +33,4 @@ function moreRainbow(){
     },500);
   },500);
 }
-moreRainbow();";
+moreRainbow();`;

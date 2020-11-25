@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>dotter</title>
-    <script src="/dotter/neatcommands.js"></script>
+    <!-- <script src="/dotter/neatcommands.js"></script> -->
     <style>
     
     /* CSS files add styling rules to your content */
@@ -472,7 +472,7 @@
           </div>
       </code>
       <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
-      <button onclick="moreRainbow();codeEditorInput.innerText=moreRainbowCode;">🌈</button>
+      <button onclick="codeEditorInput.innerText=moreRainbowCode;">🌈</button>
       
         <!-- <pre>
 paint(x,y,color)
@@ -1910,6 +1910,26 @@ function download(data, filename, type) {
       }, 0); 
   }
 }
+
+
+
+
+const moreRainbowCode = `function moreRainbow(){
+    for(i=0;i<16;i++){
+    let color = "hsl("+ i*20 +",65%,70%)";
+    vertical(i, color);
+  };
+  setTimeout(function(){
+    for(i=0;i<16;i++){
+      let color = "hsl("+ i*20 +",65%,70%)";
+      horizontal(i, color);
+    }
+    setTimeout(function(){
+      moreRainbow();
+    },500);
+  },500);
+}
+moreRainbow();`;
 
     </script>
   </body>
