@@ -189,6 +189,14 @@
     #select-draw-erase label{
       display: inline-block;
     }
+    #preview #svg-output{
+      border: 1px solid var(--bgColor);
+      background-color: var(--bgColor);
+      display: flex;
+      overflow: visible;
+      border-radius: 3px;
+      box-shadow: 0 0 9px rgba(0,0,0,.2),0 0 3px rgba(0,0,0,.3),0 0px 1px rgba(0,0,0,..2),0 0px 125px -25px var(--bgColor),0 0px 25px 0px rgba(0,0,0,.3);
+    }
     #preview-pane{
       position: absolute;
       display: none;
@@ -377,7 +385,6 @@
         </div>
         <div id="preview">
           <p>Here's your preview</p>
-          <small>does anyone know a <i>mathematician</i></small>
         </div>
       </div>
     </div>
@@ -487,6 +494,8 @@
 // or, submit the existing code ✨
 
 for(i=0;i<16;i++){
+  // multiply the hue each iteration. 20
+  // keeps it under the max value for hsv()
   let color = "hsl("+ i*20 +",65%,70%)";
   horizontal(i, color);
 };
@@ -1807,9 +1816,31 @@ function coordinateWithinBounds(coordinate){
   return 0;
 }
 
-/////// API 
 
-// potential: paint/draw, erase, square, line, getColor, border, updateDrawColor,updateBackgroundColor,updateBaseColor 
+const userAction = async (lat,long) => {
+  const response = await fetch('api.openweathermap.org/data/2.5/weather?lat='+ lat +'&lon='+ lon +'&appid=7344561ed803b9ed553bc94f1e0b6c72');
+  const myJson = await response.json(); //extract JSON from the http response
+  console.log(JSON.stringify(myJson,undefined, 3));
+}
+
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else {
+    console.log("Geolocation is not supported by this browser.");
+  }
+}
+
+function showPosition(position) {
+  console.log(position.coords.latitude);
+  console.log(position.coords.longitude);
+  userAction(position.coords.latitude, position.coords.longitude);
+  
+}
+
+
+/////// API 
+// potential: paint/draw, erase, square, line, getColor, border, updateDrawColor,updateBackgroundColor,updateBaseColor, weather(locationRequest)
       
 function paint(x,y,color){
   if(!color){
@@ -1822,6 +1853,38 @@ function draw(x,y,color){
   paint(x,y,color);
 }
 
+// 
+// let exampleSeries = [
+//   {
+//     "x": 5,
+//     "y": 10,
+//   },
+//   {
+//     "x": 5,
+//     "y": 11,
+//     "color":"red",
+//   },
+// ]
+function drawSeries(series,color, delay){
+  for(itt = 0; itt < series.length; itt++){
+    let current = itt;
+    if(!color){
+      if(series[itt].color){
+        console.log("2")
+      }else{
+        console.log("3")
+      }
+    }
+    if(!delay){
+      delay = 100;
+    }
+    let timeout = delay * itt;
+    setTimeout(function(){
+      paint(series[current].x,series[current].y,series[current].color);
+    }, parseInt(timeout));
+   
+  }
+}
 function erase(x,y){
   removePixelAtCoordinate(x, y);
 }
@@ -1886,32 +1949,33 @@ function renderSVG(pxon, container) {
   
   
   const previewToPixelRatio = pxonScale / dotSize;
-  var extraGap = inputGridGapSize.value * previewToPixelRatio * BOARD_SIZE;
-
+  var extraGap = (inputGridGapSize.value * previewToPixelRatio * (BOARD_SIZE + 4));
+  console.log(extraGap);
 
   const svgns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS (svgns, 'svg');
   svg.setAttribute('xmlns', svgns);
   svg.setAttribute('version', '1.1');
-  svg.setAttribute('width', BOARD_SIZE * pxonScale + extraGap);
-  svg.setAttribute('height', BOARD_SIZE * pxonScale + extraGap);
+  svg.setAttribute('width', BOARD_SIZE * pxonScale + extraGap -0.5);
+  svg.setAttribute('height', BOARD_SIZE * pxonScale + extraGap -0.5);
 
   const {
     pxif: { pixels }
   } = JSON.parse(pxon);
   
-  
+  const rx = (dotRadius * previewToPixelRatio);
   const background = document.createElementNS(svgns, 'rect');
   background.setAttribute('x', 0);
   background.setAttribute('y', 0);
-  background.setAttribute('rx', 3);
-  background.setAttribute('width', BOARD_SIZE * pxonScale + extraGap);
-  background.setAttribute('height', BOARD_SIZE * pxonScale + extraGap);
+  background.setAttribute('rx', (rx*2));
+  background.setAttribute('width', BOARD_SIZE * pxonScale + extraGap -0.5);
+  background.setAttribute('height', BOARD_SIZE * pxonScale + extraGap -0.5);
   background.setAttribute('fill', backgroundColor);
   
   svg.appendChild(background);
-  
-  var gridSpacer = 0;
+
+  var gridSpacerX = 1;
+  var gridSpacerY = 1;
   const gridGap = (inputGridGapSize.value * previewToPixelRatio);
   
   pixels.forEach((p) => {
@@ -1923,18 +1987,22 @@ function renderSVG(pxon, container) {
     var px = ps * Math.ceil(p.x/ps);
     var py = ps * Math.ceil(p.y/ps);
     
-    px = parseFloat(px) + (gridSpacer * gridGap);
-    py = parseFloat(py) + (gridSpacer * gridGap);
+    px = parseFloat(px) + (gridSpacerX * gridGap + 2);
+    py = parseFloat(py) + (gridSpacerY * gridGap + 2);
     
-    if(gridSpacer == BOARD_SIZE){
-      gridSpacer = 0;
+    // because this is setting down each pixel one at a time,
+    // left to right and top to bottom, we need to calculate
+    // when each new row to create margins via offsetting x,y
+    if(gridSpacerX == (BOARD_SIZE)){
+      gridSpacerX = 1;
+      gridSpacerY++;
     }else{
-      gridSpacer++;
+      gridSpacerX++;
     }
     
    
     
-    const rx = (dotRadius * previewToPixelRatio);
+    
     
     const pixel = document.createElementNS(svgns, 'rect');
     pixel.setAttribute('x', px);
@@ -1958,6 +2026,7 @@ function renderSVGfromExportWindow(){
   const input = document.getElementById('export-pxon-textarea');
   const output = document.createElement('div');
   output.setAttribute('id', 'svg-output');
+  
   document.getElementById('preview').appendChild(output);
   
   // input.oninput = function(e) {
@@ -1991,7 +2060,9 @@ function download(data, filename, type) {
 
 
 const moreRainbowCode = `function moreRainbow(){
-    for(i=0;i<16;i++){
+  for(i=0;i<16;i++){
+    // multiply the hue each iteration, using 20
+    // keeps it under the max value for hsv()
     let color = "hsl("+ i*20 +",65%,70%)";
     vertical(i, color);
   };
