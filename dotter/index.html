@@ -460,7 +460,7 @@
           </div>
       </code>
       <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
-      <button onclick="moreRainbow()">🌈</button>
+      <button onclick="moreRainbow();codeEditorInput.innerText=moreRainbow;">🌈</button>
       
         <!-- <pre>
 paint(x,y,color)
@@ -938,7 +938,7 @@ inputHideCheckbox.addEventListener(
   }
 );
 
-codeEditor = document.getElementById("code-editor-input");
+var codeEditorInput = document.getElementById("code-editor-input");
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
 inputCodeEditorCheckbox.addEventListener( 
