@@ -56,7 +56,7 @@
       z-index: 999009;
       width: 80%;
       height: 80%;
-      display: flex;
+      display: none;
       position: fixed;
       flex-direction: column;
       top: 50%;
@@ -71,6 +71,8 @@
       width: 100%;
       position: fixed; /* Stay in place */
       z-index: 99999;
+      display: none;
+      touch-action: none;
       left: 0;
       top: 0;
       background-color: var(--bgColor);
@@ -83,10 +85,13 @@
       height: 100%;
     }
     .modal-inner > div{
+      flex: 1;
     }
     .modal-inner textarea{
       display: flex;
-      height: 50%;
+      height: 400px;
+      flex: 1;
+      width: 80%;
     }
     #pxon-scale{
       position: absolute;
@@ -313,6 +318,10 @@
       bottom: -5px;
       font-size: 10px;
     }
+    #preview #svg-output{
+      transform-origin-x: 0;
+      transform-origin-y: 0;
+    }
     @media only screen and (min-width: 440px) {
       input,label, button{
         text-transform: lowercase;
@@ -324,8 +333,9 @@
     </style>
   </head>  
   <body>
-    <!-- <div id="export-window">
+    <div id="export-window">
       <h2>Export your dots to PXON or SVG</h2>
+      <button id="close-export-modal">close this</button>
       <div class="modal-inner">
         <div id="export-pxon">
           <p>Here's your pxon</p>
@@ -340,25 +350,22 @@
         </div>
       </div>
     </div>
-    <div class="overlay"></div> -->
+    <div id="overlay-backdrop" class="overlay"></div>
     <div id="main">
       <header><h1>DOTTER</h1></header>
       <div id="grid-container" class="board-container"></div>
       <div class="tools colors">
         <div id="initial-dot-color-select">
           <label for="initial-dot-color-selected">Base color</label>
-          <input type="color" id="initial-dot-color-selected" name="select-initial-dot-color"
-             value="#1f1f1f">
+          <input type="color" id="initial-dot-color-selected" name="select-initial-dot-color" value="#1f1f1f" tabIndex="0"/>
         </div>
         <div id="color-select">
           <label for="color-selected">Draw Color</label>
-          <input type="color" id="color-selected" name="select-color"
-             value="#FFA57D">
+          <input type="color" id="color-selected" name="select-color" value="#FFA57D" tabIndex="0"/>
         </div>
         <div id="background-select">
           <label for="background-color-selected">Background Color</label>
-          <input type="color" id="background-color-selected" name="select-background-color"
-             value="#19181A">
+          <input type="color" id="background-color-selected" name="select-background-color" value="#19181A" tabIndex="0"/>
         </div>
       </div>
       <div class="tools sizing">
@@ -396,6 +403,9 @@
           </div>
           <div class="redo">
             <button id="redo-button" disabled>redo</button>
+          </div>
+          <div>
+            <button id="open-save-export-button">save/export</button>
           </div>
         </div>
         <div id="more-tools">
@@ -444,7 +454,6 @@
           <div>
             for(i=0;i<16;i++){<br/>
               &nbsp;&nbsp;let color = "hsl("+ i*20 +",65%,70%)";<br/>
-              &nbsp;&nbsp;color = color.toString();<br/>
               &nbsp;&nbsp;horizontal(i, color);<br/>
             };
           </div>
@@ -506,12 +515,15 @@ var gridContainer,
   undoPresses = 0,
   undoCount = 0,
   undoButton = document.getElementById("undo-button"),
+  openSaveExportButton = document.getElementById("open-save-export-button"),
+  closeExportModal = document.getElementById("close-export-modal"),
+  overlayBackdrop = document.getElementById("overlay-backdrop"),
   BOARD_SIZE = 16,
   dotBoard,
   dotCount,
   currentTool,
   hasDrawnSwitch = false,
-  pxonScale = 1,
+  pxonScale = 10,
   dot,
   color,
   undoSize,
@@ -804,6 +816,42 @@ if(drawEraseRadios.length) {
   }
 }
 
+// Bind to clicks on save/export button
+openSaveExportButton.addEventListener( 
+  'click',
+  function() {
+    toggleExportWindow();
+  }
+);
+
+closeExportModal.addEventListener( 
+  'click',
+  function() {
+    toggleExportWindow();
+  }
+);
+
+overlayBackdrop.addEventListener( 
+  'click',
+  function() {
+    toggleExportWindow();
+  }
+);
+
+function toggleExportWindow(){
+  var exportWindow = document.getElementById("export-window");
+  if (exportWindow.style.display != "block"){
+    updatePXON();
+    renderSVGfromExportWindow();
+    exportWindow.style.display = "block";
+    overlayBackdrop.style.display = "flex";
+  } else {
+    exportWindow.style.display = "none"
+    overlayBackdrop.style.display = "none"
+
+  }
+}
+
 // Bind & handle changes on PXON VIEWER CHECKBOX
 inputPxonViewerCheckbox.addEventListener( 
   'change',
@@ -1055,6 +1103,7 @@ function startup() {
   gridContainer = document.getElementById('grid-container');
   dotBoard = document.createElement("div");
   dotBoard.className = "board board0";
+  dotBoard.tabIndex = "0";
   gridContainer.appendChild(dotBoard);        
   dotCount = BOARD_SIZE * BOARD_SIZE
   for (iteration = 0; iteration<dotCount; iteration++) {
@@ -1090,7 +1139,178 @@ if(document.readyState === "complete" || (document.readyState !== "loading" && !
   document.addEventListener("DOMContentLoaded", startup());
 }
 
-      
+// event listener for keyup
+function checkTabPress(e) {
+    "use strict";
+    // pick passed event or global event object if passed one is empty
+    e = e || event;
+    var activeElement;
+    if (e.keyCode == 9) {
+        // Here read the active selected link.
+        activeElement = document.activeElement;
+        // If HTML element is an anchor <a>
+        console.log(activeElement);
+        if (activeElement = document.querySelector('#grid-container .board'))
+            // get it's hyperlink
+            console.log("it's "+ activeElement);
+    }
+}
+
+
+
+
+var keyboardLeft = 37,
+keyboardUp = 38,
+keyboardRight = 39,
+keyboardDown = 40,
+keyboardTab = 9,
+keyboardSpace = 32,
+keyboardEnter = 13,
+keyboardE = 69, // erase
+keyboardD = 68, // draw
+keyboardH = 72, // horizontal
+keyboardV = 86; // vertical
+ 
+
+var activeDot;
+var dots = document.querySelectorAll('#grid-container .dot');
+
+// Keyboard input handling
+
+// KEY DOWN
+document.body.onkeydown = function(e){
+  
+  var dots = document.querySelectorAll('#grid-container .dot');
+  var boardFocused = isFocused(document.querySelector('#grid-container .board'));
+  var dotActive = document.activeElement.classList.contains("dot");
+  var zeroIndexBoardSize = BOARD_SIZE - 1;
+  var prevDot;
+  
+  function moveFocus(toNumber){
+    if(prevDot){
+      prevDot.removeAttribute("tabIndex");
+    }
+    dots[toNumber].setAttribute("tabIndex","0");
+    dots[toNumber].focus();
+    console.log("moving focus to " + toNumber + ".");
+    prevDot = dots[toNumber];
+  }
+  
+  // HANDLE D
+  if(e.keyCode == keyboardD && dotActive){
+    addDot(dots[activeDot], color);
+  }
+  
+  // HANDLE D
+  if(e.keyCode == keyboardD && dotActive){
+    addDot(dots[activeDot], color);
+  }
+  
+  // HANDLE E
+  if(e.keyCode == keyboardE && dotActive){
+    // HANDLE SPACE & ENTER  WHEN BOARD IS FOCUSED
+    removeDot(dots[activeDot]);
+  }
+  
+  // HANDLE SPACE & ENTER  WHEN BOARD IS FOCUSED
+  if(e.keyCode == keyboardSpace   && boardFocused ||
+     e.keyCode == keyboardEnter && boardFocused ){
+    e.preventDefault(); 
+    dots[0].setAttribute("tabIndex","0");
+    dots[0].focus();
+    console.log("set forus to dot one");
+    activeDot = 0;
+  }
+  // HANDLE TAB  WHEN BOARD IS FOCUSED
+  if(e.keyCode == 9 && boardFocused ){
+    e.preventDefault(); 
+    dots[0].setAttribute("tabIndex","0");
+    dots[0].focus();
+    console.log("set forus to dot one");
+    activeDot = 0;
+  }
+  // HANDLE SPACE & ENTER  WHEN DOT IS FOCUSED
+  if(e.keyCode == keyboardSpace && document.activeElement.classList.contains("dot") ||
+     e.keyCode == keyboardEnter && document.activeElement.classList.contains("dot") && !boardFocused ){
+    e.preventDefault(); 
+    updatePixel(dots[activeDot], newDrawColor);
+  }
+  // HANDLE RIGHT ARROW 
+  if(e.keyCode == keyboardRight && document.activeElement.classList.contains("dot")){
+    e.preventDefault(); 
+    console.log(activeDot);
+    if(activeDot < dots.length - 1){
+      activeDot++;
+    }
+    moveFocus(activeDot);
+  }
+  // HANDLE LEFT ARROW 
+  if(e.keyCode == keyboardLeft && document.activeElement.classList.contains("dot")){
+    e.preventDefault(); 
+    console.log(activeDot);
+    if(0 < activeDot){
+      activeDot--;
+    }
+    moveFocus(activeDot);
+  }
+  // HANDLE DOWN ARROW 
+  if(e.keyCode == keyboardDown && document.activeElement.classList.contains("dot")){
+    e.preventDefault(); 
+    console.log(activeDot);
+    if(activeDot < dots.length - BOARD_SIZE){
+      activeDot = activeDot + BOARD_SIZE;
+    }
+    moveFocus(activeDot);
+  }
+  // HANDLE UP ARROW 
+  if(e.keyCode == keyboardUp && document.activeElement.classList.contains("dot")){
+    e.preventDefault(); 
+    console.log("testing if " + activeDot +" is greater than " +zeroIndexBoardSize);
+    if(activeDot > zeroIndexBoardSize){
+      activeDot = activeDot - BOARD_SIZE;
+    }
+    moveFocus(activeDot);
+  }
+}
+
+
+// KEY DOWN
+document.body.onkeyup = function(e){
+  
+}
+
+function handleSpaceEnterPress(e) {
+    "use strict";
+  // pick passed event or global event object if passed one is empty
+  e = e || event;
+  var activeElement;
+  console.log(e.keyCode);
+  if (e.keyCode == 9) {
+      // Here read the active selected link.
+      activeElement = document.activeElement;
+      // If HTML element is an anchor <a>
+      console.log(activeElement);
+      if (activeElement = document.querySelector('#grid-container .board'))
+          // get it's hyperlink
+          console.log("it's "+ activeElement);
+  }
+}
+
+var body = document.querySelector('body');
+body.addEventListener('keyup', checkTabPress);
+
+  const focusedBoard = document.querySelector('#grid-container .name');
+  isFocused(focusedBoard);  
+
+function isFocused(elem){
+  if (elem === document.activeElement) {
+      console.log('Element has focus!');
+      return true;
+  } else {
+      console.log(`Element is not focused.`);
+      return false;
+  }
+}
 //////// BIND CLICKS TO ACTIVE BOARD PIXELS
 
 function bindClicksForCurrentBoard(){
@@ -1113,7 +1333,7 @@ function bindClicksForCurrentBoard(){
     };
     dot.onmouseup = function() {
       pressed = false;
-      updatePXON()
+      updatePXON();
       undoStackAdd();
       updateUndoButton();
       saveState();
@@ -1167,30 +1387,47 @@ function bindClicksForCurrentBoard(){
   }, { passive: false });
 }
 
+
       
 //////// DRAW LOGIC
       
-// WHAT HAPPENS WHEN A DOT IS CLICKED
+// UPDATE DOT ELEMENT USING ACTIVE TOOL
 function updatePixel(dot, color) {
   if(currentTool == "erase"){
-    erase(dot, color);
+    removeDot(dot);
   }else{
-    draw(dot, color);
+    addDot(dot, color);
   }
 }
 
+// UPDATE DOT AT COORDINATE USING ACTIVE TOOL
 function updatePixelAtCoordinate(x, y, color) {
-  dot = getPixelByCoordinate(x, y);
+  let foundDot = getPixelByCoordinate(x, y);
   if(currentTool == "erase"){
-    erase(dot, color);
+    removeDot(foundDot);
   }else{
-    draw(dot, color);
+    addDot(foundDot, color);
   }
+}
+
+// DRAW DOT AT COORDINATE 
+function addPixelAtCoordinate(x, y, color) {
+  let foundDot = getPixelByCoordinate(x, y);
+  addDot(foundDot, color);
+}
+
+// ERASE DOT AT COORDINATE 
+function removePixelAtCoordinate(x, y) {
+  let foundDot = getPixelByCoordinate(x, y);
+  removeDot(foundDot);
 }
 
 var prevDot, prevColor;
 
-function draw(dot, color){
+function addDot(dot, color){
+  if(!color){
+    color = "var(--currentNewDrawColor)"
+  }
   if (dot != prevDot || color != prevColor){
     dot.style.cssText += `--glowColor:` + color + `;--dotColor:` + color + `;background-color: var(--dotColor);z-index:99;`;
     updatePXON();
@@ -1200,7 +1437,7 @@ function draw(dot, color){
   prevDot = dot;
   prevColor = color
 }
-function erase(dot, color){
+function removeDot(dot){
   dot.style.cssText = `z-index:1;`;
 }
  
@@ -1263,9 +1500,13 @@ function updateUndoButton(currentSpot){
   }
 }
 
+
 // WHEN THE UNDO BUTTON IS PRESSED
 document.getElementById("undo-button").onclick = function(){
-  
+  triggerUndo();
+}; 
+
+function triggerUndo(){
   // get size of undo array
   let undoSize = undoStack.length;
   
@@ -1297,7 +1538,7 @@ document.getElementById("undo-button").onclick = function(){
   
   // re-set-up bindings 
   bindClicksForCurrentBoard();
-}; 
+}
 
  
  
@@ -1353,7 +1594,7 @@ function updatePXON(){
   createPXON();
   pxonClean = JSON.stringify(pxon, undefined, 3)
   document.getElementById("raw").innerHTML = pxonClean;
-  // document.getElementById("export-pxon-textarea").innerHTML = pxonClean; 
+  document.getElementById("export-pxon-textarea").innerHTML = pxonClean; 
   hasDrawn(hasDrawnSwitch)
 } 
 
@@ -1438,8 +1679,15 @@ function paint(x,y,color){
   if(!color){
     color = newDrawColor;
   }
-  updatePixelAtCoordinate(x,y,color);
+  addPixelAtCoordinate(x,y,color);
   undoStackAdd();
+}
+function draw(x,y,color){
+  paint(x,y,color);
+}
+
+function erase(x,y){
+  removePixelAtCoordinate(x, y);
 }
 
 function horizontal(y, color){
@@ -1501,16 +1749,18 @@ function renderSVG(pxon, container) {
   }
 
   const svgns = 'http://www.w3.org/2000/svg';
-  const el = document.createElementNS (svgns, 'svg');
-  el.setAttribute('xmlns', svgns);
-  el.setAttribute('version', '1.1');
-  el.style.width = BOARD_SIZE;
-  el.style.height = BOARD_SIZE;
+  const svg = document.createElementNS (svgns, 'svg');
+  svg.setAttribute('xmlns', svgns);
+  svg.setAttribute('version', '1.1');
+  svg.setAttribute('width', BOARD_SIZE * pxonScale)
+  svg.setAttribute('height', BOARD_SIZE * pxonScale);
 
   const {
     pxif: { pixels }
   } = JSON.parse(pxon);
-
+  
+  const previewToPixelRatio = pxonScale / dotSize;
+  
   pixels.forEach((p) => {
     const ps = p.size;
     const pc = p.color;
@@ -1518,17 +1768,20 @@ function renderSVG(pxon, container) {
     // Normalise x/y values to closest grid coordinate
     const px = ps * Math.ceil(p.x/ps);
     const py = ps * Math.ceil(p.y/ps);
-
+    
+    const rx = (dotRadius * previewToPixelRatio);
+    
     const pixel = document.createElementNS(svgns, 'rect');
     pixel.setAttribute('x', px);
     pixel.setAttribute('y', py);
+    pixel.setAttribute('rx', rx);
     pixel.setAttribute('width', ps);
     pixel.setAttribute('height', ps);
     pixel.setAttribute('fill', pc);
-    el.appendChild(pixel);
+    svg.appendChild(pixel);
   });
-  container.appendChild(el);
-  document.getElementById('export-svg-textarea').value = el.outerHTML;
+  container.appendChild(svg);
+  document.getElementById('export-svg-textarea').value = svg.outerHTML;
 }
 
 function renderSVGfromExportWindow(){
