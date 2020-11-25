@@ -1819,11 +1819,12 @@ function coordinateWithinBounds(coordinate){
   return 0;
 }
 
-
+var jsssson;
 const userAction = async (lat,long) => {
   const response = await fetch('https://api.openweathermap.org/data/2.5/weather?lat='+ lat +'&lon='+ long +'&appid=7344561ed803b9ed553bc94f1e0b6c72');
   const myJson = await response.json(); //extract JSON from the http response
-  console.log(JSON.stringify(myJson,undefined, 3));
+  console.log(myJson);
+  jsssson = myJson;
 }
 
 function getLocation() {
