@@ -1826,30 +1826,32 @@ function bindClicksForCurrentBoard(){
 }
 
 
-var timer = 100;
 
 //////// DRAW LOGIC
-      
+
+var timer = 65;
+      // s(horizontal(1));
 // UPDATE DOT ELEMENT USING ACTIVE TOOL
 function updatePixel(dot, color, cmd) {
+  
   let coords = new getCoordinateByPixel(dot);
   if (cmd){
     if(cmd == "horizontal"){
       horizontal(coords.y, color);
-      instructions.innerHTML += "\nsetTimeout(function(){\n  horizontal(" +coords.y + ", '"+color+"')}\n,"+timer+");";
+      instructions.innerHTML += `\ns(h(`+coords.y+`,`+color+`),`+timer+`);`
     }else if (cmd == "vertical") {
       vertical(coords.x, color);    
-      instructions.innerHTML += "\nsetTimeout(function(){\nvertical(" +coords.x + ", '"+color+"')}\n,"+timer+");";
+      instructions.innerHTML += `\ns(v(`+coords.x+`,`+color+`),`+timer+`);`;
 
     }
   } else if(currentTool == "erase"){
     removeDot(dot);
-    instructions.innerHTML += "\nsetTimeout(function(){\nremovePixelAtCoordinate(" + coords.x + ", " + coords.y + "')}\n,"+timer+");";
+    instructions.innerHTML += `\ns(del(`+coords.x+`, `+coords.y+`)`+timer+`)`;
   }else{
     addDot(dot, color);
-    instructions.innerHTML += "\nsetTimeout(function(){\naddPixelAtCoordinate("+coords.x+", "+coords.y+", '"+color+"')}\n,"+timer+");";
+    instructions.innerHTML += `\ns(add(`+coords.x+`, `+coords.y+`, `+color+`),`+timer+`)`;
   }
-  timer += 100;
+  timer += 65;
 
   
 }
@@ -1871,10 +1873,16 @@ function addPixelAtCoordinate(x, y, color) {
   let foundDot = getPixelByCoordinate(x, y);
   addDot(foundDot, color);
 }
+function add(x, y, color) {
+  addPixelAtCoordinate(x, y, color)
+}
 
 // ERASE DOT AT COORDINATE 
 function removePixelAtCoordinate(x, y) {
   let foundDot = getPixelByCoordinate(x, y);
+}
+function del(x, y) {
+  removePixelAtCoordinate(x, y)
 }
 
 var prevDot, prevColor;
@@ -2204,6 +2212,19 @@ function erase(x,y){
   removePixelAtCoordinate(x, y);
 }
 
+function s(f,t){
+  if(!t){
+    let t = 100;
+  }
+  setTimeout(function(){
+    f();
+  },t);
+};
+
+function h(y, color){
+  horizontal(y, color);
+}
+
 function horizontal(y, color){
   if(!color){
     color = newDrawColor;
@@ -2212,6 +2233,10 @@ function horizontal(y, color){
     updatePixelAtCoordinate(iter,y,color);
   }
   undoStackAdd();
+}
+
+function v(x, color){
+  vertical(x, color);
 }
 
 function vertical(x, color){
