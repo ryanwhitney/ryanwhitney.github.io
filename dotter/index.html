@@ -143,7 +143,7 @@
       right: 5px;
       top: 5px;
     }
-    #pxon-panel{
+    #pxon-panel, #instruction-panel{
       display: flex;
       flex-direction: column;
       line-break: normal;
@@ -420,11 +420,9 @@
       <header>
         <h1>DOTTER <button id="dotter-up">⌃</button><span id="dotter-num">16</span><button id="dotter-down">⌄</button></h1>
       </header>
-      <div style="display:flex;">
-        <pre style="display:none;flex:1;" id="instructions"></pre>
-        <div style="flex:4;" id="grid-container" class="board-container"></div>
-      </div>
+      <div  id="grid-container" class="board-container"></div>
       <button id="color-eyedropper">🎯</button>
+      <pre id="code-editor-console" style="text-align:center;opacity: .4;margin-top: 0;"></pre>
       <div id="keyboard-shortcuts">
         <small style="text-align: center;display: block;opacity: .7;">tab to activate board</small>
         <table>
@@ -551,6 +549,10 @@
             <label for="code-editor-checkbox">draw with words</label>
           </div>
           <div class="check experiment">
+            <input type="checkbox" id="enable-instruction-viewer" name="enable-instruction-viewer">
+            <label for="enable-instruction-viewer">Instruction viewer</label>
+          </div>
+          <div class="check experiment">
             <input type="checkbox" id="enable-pxon-viewer" name="enable-pxon-viewer">
             <label for="enable-pxon-viewer">PXON viewer</label>
           </div>
@@ -580,7 +582,6 @@
         </p>
         <p>just replace <b>x</b> and <b>y</b> with coordinates.</p>
         <p>bonus: all of these take color (string) as an optional parameter.</p>
-        <pre id="code-editor-console"></pre>
         <pre>
 <code name="code-editor" id="code-editor-input" contenteditable="true" autocapitalize="off" autocomplete="off" spellcheck="false" class="javascript">// try <strong>paint(0,1,"red");</strong> below 
 // or, submit the existing code ✨
@@ -611,6 +612,11 @@ square(x1,y1,x2,y2,color)
         </pre> -->
       </div>
     </div>
+    <div id="instruction-panel">
+      <button id="copy-instruction">copy url</button>
+
+      <textarea style="height:1000px;" id="instructions"></textarea>
+    </div>
     <div id="pxon-panel">
       <div class="pxon-panel-top">
         <div id="pxon-scale">
@@ -635,6 +641,15 @@ square(x1,y1,x2,y2,color)
     
     
 <script>
+
+
+
+
+
+
+
+
+
 function sleep(milliseconds) { 
   let timeStart = new Date().getTime(); 
   while (true) { 
@@ -678,6 +693,8 @@ var inputInitialDotColor = document.getElementById("initial-dot-color-selected")
   inputGlowRadius = document.getElementById("glow-amount"),
   inputDrawEraseRadio = document.getElementById("draw"),
   inputHideCheckbox = document.getElementById("hide-checkbox"),
+  inputInstructionViewerCheckbox = document.querySelector("input[name=enable-instruction-viewer]"),
+
   inputPxonViewerCheckbox = document.querySelector("input[name=enable-pxon-viewer]"),
   inputPxonScale = document.getElementById("select-pxon-scale")
   inputCodeEditorCheckbox = document.getElementById("code-editor-checkbox")
@@ -705,6 +722,7 @@ var initialDotColor,
   gridGapSize,
   glowRadius,
   hideCheckbox,
+  instructionViewerCheckbox,
   pxonViewerCheckbox,
   codeEditorCheckbox,
   undoVisualizerCheckbox,
@@ -720,6 +738,7 @@ var initialDotColor,
     gridGapSize: 3,
     glowRadius: 0,
     hideCheckbox: false,
+    instructionViewerCheckbox: false,
     pxonViewerCheckbox: false,
     pxonScale: 1,
     codeEditorCheckbox: true,
@@ -738,6 +757,7 @@ function getState(){
   gridGapSize = inputGridGapSize.value;
   hideCheckbox = inputHideCheckbox.checked;
   glowRadius = inputGlowRadius.value;
+  instructionViewerCheckbox = inputInstructionViewerCheckbox.checked;
   pxonViewerCheckbox = inputPxonViewerCheckbox.checked;
   codeEditorCheckbox = inputCodeEditorCheckbox.checked;
   undoVisualizerCheckbox = inputUndoVisualizerCheckbox.checked;
@@ -757,6 +777,7 @@ function loadState(){
     glowRadius = localStorage.getItem("glowRadius");
     hideCheckbox = localStorage.getItem("hideCheckbox");
     codeEditorCheckbox = localStorage.getItem("codeEditorCheckbox");
+    instructionViewerCheckbox = localStorage.getItem("instructionViewerCheckbox");
     pxonViewerCheckbox = localStorage.getItem("pxonViewerCheckbox");
     undoVisualizerCheckbox = localStorage.getItem("undoVisualizerCheckbox");
     undoVisualizerScale = localStorage.getItem("undoVisualizerScale");
@@ -989,12 +1010,23 @@ function toggleExportWindow(){
 }
 
 // Bind & handle changes on PXON VIEWER CHECKBOX
+inputInstructionViewerCheckbox.addEventListener( 
+  'change',
+  function() {
+    updateInstructionViewerCheckbox(this);
+  }
+);
+// Bind & handle changes on PXON VIEWER CHECKBOX
 inputPxonViewerCheckbox.addEventListener( 
   'change',
   function() {
     updatePxonViewerCheckbox(this);
   }
 );
+
+
+
+/// COLOR PICKER 
 var pressed;
 document.getElementById("color-eyedropper").addEventListener("click",function(e){
   body.style.cursor = "crosshair";
@@ -1036,17 +1068,6 @@ document.getElementById("color-eyedropper").addEventListener("click",function(e)
     pressed = false;
   };   
   
-  
-  
-  
-  
-  
-  
-
-  
-  
- 
-  
 })
 
 
@@ -1078,6 +1099,24 @@ function updatePxonScale(number){
 }
 
 
+function updateInstructionViewerCheckbox(input){
+  instructionContainer = document.getElementById("instruction-panel");
+  if(input){
+    if(input.checked) {
+      instructionContainer.style.display = "flex";
+      instructionContainer.style.width = "40%";
+      inputInstructionViewerCheckbox.checked = input.checked;
+    } else {
+      instructionContainer.style.display = "none";
+      instructionContainer.style.width = "0";
+      inputInstructionViewerCheckbox.checked = input.checked;
+    }
+  }else{
+    instructionContainer.style.display = "none";
+    instructionContainer.style.width = "0";
+    inputInstructionViewerCheckbox.checked = false;
+  }  
+}
 function updatePxonViewerCheckbox(input){
   pxonContainer = document.getElementById("pxon-panel");
   if(input){
@@ -1097,6 +1136,43 @@ function updatePxonViewerCheckbox(input){
   }  
 }
 
+// Set up copy instruction button
+copyInstructionButton = document.getElementById("copy-instruction");
+
+copyInstructionButton.addEventListener("click", function(){
+  
+  var getUrl = window.location;
+  var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" ;
+  console.log(baseUrl);
+  
+  var instructionsInput = document.getElementById("instructions"); 
+  
+  var instructionOutputPre = instructionsInput.innerHTML;
+  
+  
+  var instructionOutputSegment =  encodeURIComponent(instructionOutputPre);
+  
+  
+  instructionsInput.innerText = baseUrl + "?instructions=" + instructionOutputSegment;
+  
+  
+
+  console.log(instructionOutputSegment);
+
+  instructionsInput.focus();
+  instructionsInput.select();
+  try {
+    let successful = document.execCommand('copy');
+    let msg = successful ? 'successful' : 'unsuccessful';
+    copyInstructionButton.innerText = "successfully copied!";
+    setTimeout(function(){
+      copyInstructionButton.innerText = "copy again";
+    }, 1500);
+  } catch(err) {
+    alert('failed to copy. ☹️ … ' + err);
+  }
+
+})
 // Set up copy pxon button
 copyPxonButton = document.getElementById("copy-pxon");
 
@@ -1248,7 +1324,7 @@ inputUndoVisualizerGap.addEventListener("input", function() {
     updateUndoVisualizerScale(inputUndoVisualizerScale.value); 
   }, 15);
 }, false); 
-
+var timeout;
 
 // Handle code input
 
@@ -1260,9 +1336,12 @@ inputCodeSubmitButton.addEventListener("click", function(){
   var errorContainer = document.getElementById("code-editor-console")
   errorContainer.innerHTML = "";
   try{
-    eval(userCode);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    var timeout = true;
+    setTimeout(function(){
+      eval(userCode)
+    },100);  
   } catch(e) {
-    
     // console.log(e.lineNumber);
     errorContainer.innerHTML = e.message;
     console.log("something done wrong " +e.message)
@@ -1339,6 +1418,8 @@ function updateBackgroundColor(color){
       
       
 function clearBoard() {
+  window.history.pushState("object or string", "Title", "/"+window.location.href.substring(window.location.href.lastIndexOf('/') + 1).split("?")[0]);
+
   if(gridContainer){
     var dots = document.querySelectorAll(".dot");
     gridContainer.style.transition = "all 1s ease"
@@ -1384,8 +1465,8 @@ function startup() {
   gridContainer.appendChild(dotBoard);        
   dotCount = BOARD_SIZE * BOARD_SIZE
   
-  for(x = 0; x < BOARD_SIZE; x++){
-    for(y = 0; y < BOARD_SIZE; y++){            
+  for(y = 0; y < BOARD_SIZE; y++){
+    for(x = 0; x < BOARD_SIZE; x++){            
         dot = document.createElement("div");
         dot.className = "dot";
         dot.setAttribute("x-coord", x);
@@ -1409,7 +1490,28 @@ function startup() {
   // Save grid
   getCurrentPixels();
   saveState();
+  
+  
+  const queryString = new URLSearchParams(window.location.search);
+  // console.log(queryString);
 
+  if(queryString.has('instructions')){
+    const urlParams = queryString.get('instructions');
+    console.log(urlParams);
+    userCode = decodeURIComponent(urlParams);
+    console.log(userCode);
+    var errorContainer = document.getElementById("code-editor-console")
+    errorContainer.innerHTML = "";
+    try{
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      eval(userCode)
+      document.getElementById('code-editor-console').innerText = "it looks like you opened a link with a drawing, you'll have to clear to start new. Top left corner!"
+    } catch(e) {
+      // console.log(e.lineNumber);
+      errorContainer.innerHTML = e.message;
+      console.log("something done wrong " +e.message)
+    }
+  }
 };
 
 
@@ -1724,26 +1826,30 @@ function bindClicksForCurrentBoard(){
 }
 
 
-      
+var timer = 100;
+
 //////// DRAW LOGIC
       
 // UPDATE DOT ELEMENT USING ACTIVE TOOL
 function updatePixel(dot, color, cmd) {
+  let coords = new getCoordinateByPixel(dot);
   if (cmd){
     if(cmd == "horizontal"){
-      let yRow = new getCoordinateByPixel(dot);
-      horizontal(yRow.x, color);
+      horizontal(coords.y, color);
+      instructions.innerHTML += "\nsetTimeout(function(){\n  horizontal(" +coords.y + ", '"+color+"')}\n,"+timer+");";
     }else if (cmd == "vertical") {
-      let xRow = new getCoordinateByPixel(dot);
-      vertical(xRow.y, color);    
+      vertical(coords.x, color);    
+      instructions.innerHTML += "\nsetTimeout(function(){\nvertical(" +coords.x + ", '"+color+"')}\n,"+timer+");";
+
     }
   } else if(currentTool == "erase"){
     removeDot(dot);
-    instructions.innerHTML += "\nremovePixelAtCoordinate(" + x + ", " + y + ");";
+    instructions.innerHTML += "\nsetTimeout(function(){\nremovePixelAtCoordinate(" + coords.x + ", " + coords.y + "')}\n,"+timer+");";
   }else{
     addDot(dot, color);
-    instructions.innerHTML += "\naddPixelAtCoordinate("+x+", "+y+", "+color+");";
+    instructions.innerHTML += "\nsetTimeout(function(){\naddPixelAtCoordinate("+coords.x+", "+coords.y+", '"+color+"')}\n,"+timer+");";
   }
+  timer += 100;
 
   
 }
