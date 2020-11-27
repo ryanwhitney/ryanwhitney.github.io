@@ -417,8 +417,9 @@
     </div>
     <div id="overlay-backdrop" class="overlay"></div>
     <div id="main">
-      <header>
+      <header><a href="/">
         <h1>DOTTER <button id="dotter-up">⌃</button><span id="dotter-num">16</span><button id="dotter-down">⌄</button></h1>
+        </a>
       </header>
       <div  id="grid-container" class="board-container"></div>
       <button id="color-eyedropper">🎯</button>
@@ -1149,10 +1150,10 @@ copyInstructionButton.addEventListener("click", function(){
   
   var instructionOutputPre = instructionsInput.innerHTML;
   
-  
-  var instructionOutputSegment =  encodeURIComponent(instructionOutputPre);
-  
-  
+  var compressed=en(instructionOutputPre)
+
+  var instructionOutputSegment =  encodeURIComponent(compressed);
+    
   instructionsInput.innerText = baseUrl + "?instructions=" + instructionOutputSegment;
   
   
@@ -1497,20 +1498,41 @@ function startup() {
 
   if(queryString.has('instructions')){
     const urlParams = queryString.get('instructions');
-    console.log(urlParams);
-    userCode = decodeURIComponent(urlParams);
-    console.log(userCode);
+    console.log("have params "+urlParams);
+    userCode = de(urlParams);
+    console.log("decoded: "+urlParams);
+
+    userCode = decodeURIComponent(userCode);
+    console.log("decoded again "+userCode);
+
     var errorContainer = document.getElementById("code-editor-console")
     errorContainer.innerHTML = "";
-    try{
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      eval(userCode)
-      document.getElementById('code-editor-console').innerText = "it looks like you opened a link with a drawing, you'll have to clear to start new. Top left corner!"
-    } catch(e) {
-      // console.log(e.lineNumber);
-      errorContainer.innerHTML = e.message;
-      console.log("something done wrong " +e.message)
-    }
+    var arrayLOC = userCode.split('\n');
+    console.log(arrayLOC);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    
+      // avoid having looping timeouts beat each other over the head.
+      // thank you Felix Kling (https://stackoverflow.com/questions/6788275/eval-and-settimeout-in-a-loop/6788386#6788386)
+      (function() {
+        var data = arrayLOC;
+        var run = function(i) {
+            setTimeout(function() {
+                var entry = data[i];
+                if(entry) {
+                  try{
+                    eval(entry)  
+                  } catch(e) {
+                    // console.log(e.lineNumber);
+                    errorContainer.innerHTML = e.message;
+                    console.log("something done wrong " +e.message)
+                  }
+                  run(i+1);
+                }
+            }, 85);
+        };
+        run(0);
+      }());
   }
 };
 
@@ -1827,29 +1849,33 @@ function bindClicksForCurrentBoard(){
 
 
 
-//////// DRAW LOGIC
+/// COMPRESSION AND DECOMPRESSION
+/// thank you dave brown https://stackoverflow.com/a/34699901
+function en(c){var x='charCodeAt',b,e={},f=c.split(""),d=[],a=f[0],g=256;for(b=1;b<f.length;b++)c=f[b],null!=e[a+c]?a+=c:(d.push(1<a.length?e[a]:a[x](0)),e[a+c]=g,g++,a=c);d.push(1<a.length?e[a]:a[x](0));for(b=0;b<d.length;b++)d[b]=String.fromCharCode(d[b]);return d.join("")}
 
+function de(b){var a,e={},d=b.split(""),c=f=d[0],g=[c],h=o=256;for(b=1;b<d.length;b++)a=d[b].charCodeAt(0),a=h>a?d[b]:e[a]?e[a]:f+c,g.push(a),c=a.charAt(0),e[o]=f+c,o++,f=a;return g.join("")}
+
+
+//////// DRAW LOGIC
 var timer = 65;
       // s(horizontal(1));
 // UPDATE DOT ELEMENT USING ACTIVE TOOL
 function updatePixel(dot, color, cmd) {
-  
   let coords = new getCoordinateByPixel(dot);
   if (cmd){
     if(cmd == "horizontal"){
       horizontal(coords.y, color);
-      instructions.innerHTML += `\ns(h(`+coords.y+`,`+color+`),`+timer+`);`
+      instructions.innerHTML += `h(`+coords.y+`,'`+color+`');\n`
     }else if (cmd == "vertical") {
       vertical(coords.x, color);    
-      instructions.innerHTML += `\ns(v(`+coords.x+`,`+color+`),`+timer+`);`;
-
+      instructions.innerHTML += `v(`+coords.x+`,'`+color+`');\n`;
     }
   } else if(currentTool == "erase"){
     removeDot(dot);
-    instructions.innerHTML += `\ns(del(`+coords.x+`, `+coords.y+`)`+timer+`)`;
+    instructions.innerHTML += `del(`+coords.x+`, `+coords.y+`);\n`;
   }else{
     addDot(dot, color);
-    instructions.innerHTML += `\ns(add(`+coords.x+`, `+coords.y+`, `+color+`),`+timer+`)`;
+    instructions.innerHTML += `add(`+coords.x+`, `+coords.y+`,'`+color+`');\n`;
   }
   timer += 65;
 
@@ -2212,12 +2238,13 @@ function erase(x,y){
   removePixelAtCoordinate(x, y);
 }
 
-function s(f,t){
+function s(t,f){
   if(!t){
     let t = 100;
   }
+  console.log(f);
   setTimeout(function(){
-    f();
+    eval(f);
   },t);
 };
 
