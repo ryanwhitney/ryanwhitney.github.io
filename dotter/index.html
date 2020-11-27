@@ -1142,7 +1142,7 @@ copyInstructionButton = document.getElementById("copy-instruction");
 copyInstructionButton.addEventListener("click", function(){
   
   var getUrl = window.location;
-  var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" ;
+  var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
   console.log(baseUrl);
   
   var instructionsInput = document.getElementById("instructions"); 
