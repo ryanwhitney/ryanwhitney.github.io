@@ -265,9 +265,8 @@
     .dot{
       background-color: #19181A;
       border: 1px solid rgba(255,255,255,0);
-      transition: border .1s ease;
-      transition: filter .1s ease;
-
+      background-color: rgba(0,0,0,0);
+      transition: none;
     }  
     input[type=color]{
       /* border: none;
@@ -412,6 +411,10 @@
         </div>
         <div id="preview">
           <p>Here's your preview</p>
+          <div id="svg-preview"></div>
+          <button id="download-svg">Download SVG</button> 
+          <button id="copy-link-to-replay">Copy link to animated replay </br> (this may not work!)</button> 
+          <button id="download-pxon">Download PXON</button> 
         </div>
       </div>
     </div>
@@ -1138,7 +1141,7 @@ function updatePxonViewerCheckbox(input){
 }
 
 // Set up copy instruction button
-copyInstructionButton = document.getElementById("copy-instruction");
+copyInstructionButton = document.getElementById("copy-link-to-replay");
 
 copyInstructionButton.addEventListener("click", function(){
   
@@ -1167,7 +1170,7 @@ copyInstructionButton.addEventListener("click", function(){
     let msg = successful ? 'successful' : 'unsuccessful';
     copyInstructionButton.innerText = "successfully copied!";
     setTimeout(function(){
-      copyInstructionButton.innerText = "copy again";
+      copyInstructionButton.innerText = "copy link to animated replay again";
     }, 1500);
   } catch(err) {
     alert('failed to copy. ☹️ … ' + err);
@@ -1336,6 +1339,16 @@ inputCodeSubmitButton.addEventListener("click", function(){
   
   var errorContainer = document.getElementById("code-editor-console")
   errorContainer.innerHTML = "";
+  
+  
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .dot {
+        transition: background-color .2s ease; 
+    }`;     
+  document.head.appendChild(style);
+  
+  
   try{
     window.scrollTo({ top: 0, behavior: 'smooth' });
     var timeout = true;
@@ -1348,6 +1361,13 @@ inputCodeSubmitButton.addEventListener("click", function(){
     console.log("something done wrong " +e.message)
   }
 });
+
+      const style2 = document.createElement('style');
+      style2.innerHTML = `
+        .dot {
+            transition: none; 
+        }`;     
+      document.head.appendChild(style2);
       
 //////// HANDLING UPDATES
 
@@ -1511,7 +1531,6 @@ function startup() {
     console.log(arrayLOC);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    
       // avoid having looping timeouts beat each other over the head.
       // thank you Felix Kling (https://stackoverflow.com/questions/6788275/eval-and-settimeout-in-a-loop/6788386#6788386)
       (function() {
@@ -1527,9 +1546,9 @@ function startup() {
                     errorContainer.innerHTML = e.message;
                     console.log("something done wrong " +e.message)
                   }
-                  run(i+1);
+                  run(i+1); // loop until if(entry) is false
                 }
-            }, 85);
+            }, 85); // timeout for each draw step
         };
         run(0);
       }());
@@ -1890,7 +1909,6 @@ function updatePixelAtCoordinate(x, y, color) {
     instructions.innerHTML += "removePixelAtCoordinate(" + x + ", " + y + ");";
   }else{
     addDot(foundDot, color);
-
   }
 }
 
@@ -2394,7 +2412,7 @@ function renderSVGfromExportWindow(){
   const output = document.createElement('div');
   output.setAttribute('id', 'svg-output');
   
-  document.getElementById('preview').appendChild(output);
+  document.getElementById('svg-preview').appendChild(output);
   
   // input.oninput = function(e) {
     renderSVG(input.value, output);
@@ -2404,7 +2422,16 @@ function renderSVGfromExportWindow(){
 }
 
 
-// DOWNLOAD!? thank u https://stackoverflow.com/a/30832210
+document.getElementById('download-svg').addEventListener("click",function(){
+  let theSvg = document.getElementById('svg-output').innerHTML;
+  download(theSvg, "the-good-drawing.svg","svg")
+})
+document.getElementById('download-pxon').addEventListener("click",function(){
+  let thePxon = document.getElementById('export-pxon-textarea').innerHTML;
+  download(thePxon, "the-good-drawing.pxon","pxon")
+})
+
+// DOWNLOAD thank u https://stackoverflow.com/a/30832210
 function download(data, filename, type) {
   var file = new Blob([data], {type: type});
   if (window.navigator.msSaveOrOpenBlob) // IE10+
