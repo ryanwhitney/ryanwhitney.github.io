@@ -149,7 +149,9 @@
       line-break: normal;
       float: right;
       width: 40%;
-      display: none;
+      display:  inline;
+      position:absolute;
+      top:-99999px;
       z-index: 1;
       color: var(--textColor);
       transition: width .2s ease-in-out;
@@ -1129,8 +1131,7 @@ function updatePxonViewerCheckbox(input){
       pxonContainer.style.width = "40%";
       inputPxonViewerCheckbox.checked = input.checked;
     } else {
-      pxonContainer.style.display = "none";
-      pxonContainer.style.width = "0";
+      pxonContainer.style.display = "block";
       inputPxonViewerCheckbox.checked = input.checked;
     }
   }else{
@@ -1161,7 +1162,6 @@ copyInstructionButton.addEventListener("click", function(){
   
   
 
-  console.log(instructionOutputSegment);
 
   instructionsInput.focus();
   instructionsInput.select();
