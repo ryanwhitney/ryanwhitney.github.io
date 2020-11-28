@@ -48,6 +48,12 @@
       text-transform: lowercase;
       text-align: center;
     }
+    h1 a{
+      color: var(--currentNewDrawColor);
+      text-transform: lowercase;
+      text-align: center;
+      text-decoration: none;
+    }
     #dotter-num{
       font-size: 19px;
       font-weight: 100;
@@ -422,9 +428,9 @@
     </div>
     <div id="overlay-backdrop" class="overlay"></div>
     <div id="main">
-      <header><a href="/dotter/">
-        <h1>DOTTER <button id="dotter-up">⌃</button><span id="dotter-num">16</span><button id="dotter-down">⌄</button></h1>
-        </a>
+      <header>
+        <h1><a href="/dotter/">DOTTER</a> <button id="dotter-up">⌃</button><span id="dotter-num">16</span><button id="dotter-down">⌄</button></h1>
+        
       </header>
       <div  id="grid-container" class="board-container"></div>
       <button id="color-eyedropper">🎯</button>
