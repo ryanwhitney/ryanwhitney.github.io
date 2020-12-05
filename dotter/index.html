@@ -150,14 +150,11 @@
       top: 5px;
     }
     #pxon-panel, #instruction-panel{
-      display: flex;
+      display: none;
+      flex: 0;
+      overflow: hidden;
       flex-direction: column;
       line-break: normal;
-      float: right;
-      width: 40%;
-      display:  inline;
-      position:absolute;
-      top:-99999px;
       z-index: 1;
       color: var(--textColor);
       transition: width .2s ease-in-out;
@@ -178,7 +175,7 @@
     #pxon-panel a:hover{
       bottom: 2px;
     }
-    #raw{
+    #raw, #instructions{
       overflow: hidden;
       overflow-y: scroll;
       background: none;
@@ -404,7 +401,9 @@
     </style>
   </head>  
   <body>
-    <button onclick="clearBoard();" style="position: absolute;top:10;left:10;">clear</button>
+    <button onclick="clearBoard();" style="position: absolute;top:5px;left:5px;">clear</button>
+    <button onclick="localStorage.clear();" style="position: absolute;top:5px;left:60px;">clear localStorage</button>
+
     <div id="export-window">
       <h2>Export your dots to PXON or SVG</h2>
       <button id="close-export-modal">close this</button>
@@ -607,7 +606,7 @@ for(i=0;i<16;i++){
 </code>
       </pre>
       <input id="submit-code-button" type="submit" value="run the code" title="run the code, do it" />
-      <button onclick="codeEditorInput.innerHTML=moreRainbowCode;hljs.highlightBlock(codeEditorInput);">🌈</button>
+      <button onclick="codeEditorInput.innerHTML=rainbowBrush;hljs.highlightBlock(codeEditorInput);">🌈🎨</button><button onclick="codeEditorInput.innerHTML=moreRainbowCode;hljs.highlightBlock(codeEditorInput);">🌈🖥</button>
       
         <!-- <pre>
 paint(x,y,color)
@@ -656,44 +655,6 @@ square(x1,y1,x2,y2,color)
 
 
 
-
-
-
-
-
-
-function sleep(milliseconds) { 
-  let timeStart = new Date().getTime(); 
-  while (true) { 
-      let elapsedTime = new Date().getTime() - timeStart; 
-      if (elapsedTime > milliseconds) { 
-          break; 
-      } 
-  }
-}
-
-var gridContainer,
-  undoStack = [],
-  gridArray = [],
-  gridContainer = document.getElementById('grid-container'),
-  undoPresses = 0,
-  undoCount = 0,
-  undoButton = document.getElementById("undo-button"),
-  openSaveExportButton = document.getElementById("open-save-export-button"),
-  closeExportModal = document.getElementById("close-export-modal"),
-  overlayBackdrop = document.getElementById("overlay-backdrop"),
-  BOARD_SIZE = 16,
-  dotBoard,
-  dotCount,
-  currentTool,
-  hasDrawnSwitch = false,
-  pxonScale = 10,
-  color,
-  undoSize,
-  currentUndoSpot,
-  currentUndoSpotFromIndex,
-  UNDO_VISUALIZER = false; 
-
 //////// SET UP OPTIONS + USER INPUTS
 
 var inputInitialDotColor = document.getElementById("initial-dot-color-selected"),
@@ -716,113 +677,185 @@ var inputInitialDotColor = document.getElementById("initial-dot-color-selected")
   inputUndoVisualizerGapContainer = document.getElementById("undo-tile-gap"),
   inputUndoVisualizerGap = document.getElementById("select-undo-tile-gap");
 
-function deleteBoard() {
-  if (confirm("Are you sure you want to delete this board? It…cannot be undone.")) {
-    var board = document.querySelectorAll("#grid-container .board");
-    board[0].remove();
-    startup();
-  } else {
-    return false;
-  }
-}
 
-var initialDotColor,
-  newDrawColor,
-  backgroundColor,
-  dotSize,
-  dotRadius,
-  gridGapSize,
-  glowRadius,
-  hideCheckbox,
-  instructionViewerCheckbox,
-  pxonViewerCheckbox,
-  codeEditorCheckbox,
-  undoVisualizerCheckbox,
-  undoVisualizerScale,
-  undoVisualizerGap;
+
+var gridContainer,
+  undoStack = [],
+  gridArray = [],
+  undoPresses = 0,
+  undoCount = 0,
+  gridContainer = document.getElementById('grid-container'),
+  undoButton = document.getElementById("undo-button"),
+  openSaveExportButton = document.getElementById("open-save-export-button"),
+  closeExportModal = document.getElementById("close-export-modal"),
+  overlayBackdrop = document.getElementById("overlay-backdrop"),
+  dotBoard,
+  dotCount,
+  hasDrawnSwitch = false,
+  undoSize,
+  currentUndoSpot,
+  currentUndoSpotFromIndex,
+  UNDO_VISUALIZER = false; 
   
-  var defaultOptions = {
-    initialDotColor: "#1f1f1f",
-    newDrawColor: "#7a59ff", //ffa57d
-    backgroundColor: "#19181a",
-    dotSize: 20,
-    dotRadius: 3,
-    gridGapSize: 3,
-    glowRadius: 0,
-    hideCheckbox: false,
-    instructionViewerCheckbox: false,
-    pxonViewerCheckbox: false,
-    pxonScale: 1,
-    codeEditorCheckbox: true,
-    undoVisualizerCheckbox: false,
-    undoVisualizerScale: 2,
-    undoVisualizerGap: 0,
-    currentTool: "draw"
-  }
-
-function getState(){
-  initialDotColor = localStorage.getItem("initialDotColor") | inputInitialDotColor.value;
-  newDrawColor = inputNewDrawColor.value;
-  backgroundColor = localStorage.getItem("backgroundColor") | inputBackgroundColor.value;
-  dotSize = inputDotSize.value;
-  dotRadius = inputDotRadius.value;
-  gridGapSize = inputGridGapSize.value;
-  hideCheckbox = inputHideCheckbox.checked;
-  glowRadius = inputGlowRadius.value;
-  instructionViewerCheckbox = inputInstructionViewerCheckbox.checked;
-  pxonViewerCheckbox = inputPxonViewerCheckbox.checked;
-  codeEditorCheckbox = inputCodeEditorCheckbox.checked;
-  undoVisualizerCheckbox = inputUndoVisualizerCheckbox.checked;
-  undoVisualizerScale = inputUndoVisualizerScale.value;
-  undoVisualizerGap = inputUndoVisualizerGap.value;
-}
-
-
-function loadState(){
-  if (typeof(Storage) !== "undefined") {
-    initialDotColor = localStorage.getItem("initialDotColor");
-    newDrawColor = localStorage.getItem("newDrawColor");
-    backgroundColor = localStorage.getItem("backgroundColor");
-    dotSize = localStorage.getItem("dotSize");
-    dotRadius = localStorage.getItem("dotRadius");
-    gridGapSize = localStorage.getItem("gridGapSize");
-    glowRadius = localStorage.getItem("glowRadius");
-    hideCheckbox = localStorage.getItem("hideCheckbox");
-    codeEditorCheckbox = localStorage.getItem("codeEditorCheckbox");
-    instructionViewerCheckbox = localStorage.getItem("instructionViewerCheckbox");
-    pxonViewerCheckbox = localStorage.getItem("pxonViewerCheckbox");
-    undoVisualizerCheckbox = localStorage.getItem("undoVisualizerCheckbox");
-    undoVisualizerScale = localStorage.getItem("undoVisualizerScale");
-    undoVisualizerGap = localStorage.getItem("undoVisualizerGap");
-  } else {
-    // no localstorage..
-  }
   
+
+
+var defaultOptions = {
+  initialDotColor: "#1f1f1f", // has update function
+  newDrawColor: "#7a59ff", // y
+  backgroundColor: "#19181a", // y
+  BOARD_SIZE: 16, //u
+  dotSize: 20,
+  dotRadius: 3,
+  gridGapSize: 3,
+  glowRadius: 0,
+  hideCheckbox: false,
+  instructionViewerCheckbox: false,
+  pxonViewerCheckbox: false,
+  pxonScale: 10,
+  codeEditorCheckbox: true,
+  undoVisualizerCheckbox: false,
+  undoVisualizerScale: 2,
+  undoVisualizerGap: 0,
+  currentTool: "draw"
 }
+
+var currentOptions = defaultOptions;
+
+function loadOptions(entry, index, arr){
+  // entry is an array of [key, value], so always [0],[1] :)
+  var option = entry[0];
+  var value = entry[1]
+  
+  if(localStorage.getItem(option)){
+    // console.log("setting " + option + " as " + value + " from localStorage");
+    currentOptions[option] = localStorage.getItem(option);
+    // ^^ warning: these are going to come in as strings ^^
+    option = value; 
+  } 
+}
+
+
+
+function saveState(){
+  function saveOptions(entry, index, arr){
+    // entry is an array of [key, value], so always [0],[1] :)
+    var option = entry[0];
+    var value = entry[1]
+    localStorage.setItem(option, value);
+    // console.log("saving " + option + " as " + value + " in localStorage");
+  }
+  Object.entries(currentOptions).forEach(saveOptions);
+}
+
+
+//////// START UP   
+function startup() {
+  
+  // if theres an existing grid, clear it
+  if(gridContainer){
+    gridContainer.innerHTML = "";
+  }
+
+  // load options from localStorage
+  Object.entries(defaultOptions).forEach(loadOptions);
+  
+  // this one rly needs to be an integer (comes from localStorage as string)
+  currentOptions.BOARD_SIZE = parseInt(currentOptions.BOARD_SIZE); 
+  document.getElementById("dotter-num").innerHTML = currentOptions.BOARD_SIZE;
+  
+  // update the UI from localStorage/defaults
+  updateInitialDotColor(currentOptions.initialDotColor);
+  updateNewDrawColor(currentOptions.newDrawColor);
+  updateBackgroundColor(currentOptions.backgroundColor);
+  updatePxonViewerCheckbox(currentOptions.pxonViewerCheckbox);
+  updateDotScale(currentOptions.dotSize);
+  
+  // CREATE THE BOARD
+  gridContainer = document.getElementById('grid-container');
+  dotBoard = document.createElement("div");
+  dotBoard.className = "board board0";
+  dotBoard.tabIndex = "0";
+  gridContainer.appendChild(dotBoard);    
+  dotCount = currentOptions.BOARD_SIZE * currentOptions.BOARD_SIZE
+  // for each BOARD_SIZE number of y rows
+  for(y = 0; y < currentOptions.BOARD_SIZE; y++){
+    // create BOARD_SIZE number of x rows
+    // this gives us a grid with XY coordinates!
+    for(x = 0; x < currentOptions.BOARD_SIZE; x++){            
+        dot = document.createElement("div");
+        dot.className = "dot";
+        dot.setAttribute("x-coord", x);
+        dot.setAttribute("y-coord", y);
+        dotBoard.appendChild(dot);
+    }
+  }  
+  
+  // these show up as inline css, so the board must come first (see above)
+  updateDotRadius(currentOptions.dotRadius);
+  updateGlowRadius(currentOptions.glowRadius);
+  
+  // ADD INITIAL STATE TO THE UNDO STACK
+  grid = document.getElementById('grid-container');
+  var gridContent = grid.innerHTML;        
+  undoStack.push(gridContent);
+  
+  // set up bindings
+  bindClicksForCurrentBoard();
+  
+  // save grid
+  getCurrentPixels();
+  
+  
+  const queryString = new URLSearchParams(window.location.search);
+  // console.log(queryString);
+
+  if(queryString.has('instructions')){
+    const urlParams = queryString.get('instructions');
+    console.log("have params "+urlParams);
+    userCode = de(urlParams);
+    console.log("decoded: "+urlParams);
+
+    userCode = decodeURIComponent(userCode);
+    console.log("decoded again "+userCode);
+
+    var errorContainer = document.getElementById("code-editor-console")
+    errorContainer.innerHTML = "";
+    var arrayLOC = userCode.split('\n');
+    console.log(arrayLOC);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // avoid having looping timeouts beat each other over the head.
+      // thank you Felix Kling (https://stackoverflow.com/questions/6788275/eval-and-settimeout-in-a-loop/6788386#6788386)
+      (function() {
+        var data = arrayLOC;
+        var run = function(i) {
+            setTimeout(function() {
+                var entry = data[i];
+                if(entry) {
+                  try{
+                    eval(entry)  
+                  } catch(e) {
+                    // console.log(e.lineNumber);
+                    errorContainer.innerHTML = e.message;
+                    console.log("something done wrong " +e.message)
+                  }
+                  run(i+1); // loop until if(entry) is false
+                }
+            }, 85); // timeout for each draw step
+        };
+        run(0);
+      }());
+  }
+};
+
+
+
+  
+
 
 function applyState(){
   updateInitialDotColor(initialDotColor)
-}
-
-function saveState(){
-  if (typeof(Storage) !== "undefined") {
-    localStorage.setItem("initialDotColor", initialDotColor);
-    localStorage.setItem("newDrawColor", newDrawColor);
-    localStorage.setItem("backgroundColor", backgroundColor);
-    localStorage.setItem("dotSize", dotSize);
-    localStorage.setItem("dotRadius", dotRadius);
-    localStorage.setItem("gridGapSize", gridGapSize);
-    localStorage.setItem("glowRadius", glowRadius);
-    localStorage.setItem("hideCheckbox", hideCheckbox);
-    localStorage.setItem("codeEditorCheckbox", codeEditorCheckbox);
-    localStorage.setItem("pxonViewerCheckbox", pxonViewerCheckbox);
-    localStorage.setItem("undoVisualizerCheckbox", undoVisualizerCheckbox);
-    localStorage.setItem("undoVisualizerScale", undoVisualizerScale);
-    localStorage.setItem("undoVisualizerGap", undoVisualizerGap);  
-  } else {
-    // no localstorage..
-  }
-  
 }
 
 // hex to hsl copyright uhhh stack overflow
@@ -853,6 +886,8 @@ function unhex(hex){
   return HSL;
 }
 
+
+
 // Bind to input changes on INITIAL dot color  
 inputInitialDotColor.addEventListener("input", function() {
   updateInitialDotColor(inputInitialDotColor.value);
@@ -870,7 +905,9 @@ inputBackgroundColor.addEventListener("input", function() {
 
 // Bind to input changes on DOT RADIUS
 inputDotRadius.addEventListener("input", function() {
-  updateDotRadius(inputDotRadius.value);
+  if(this.value){
+    updateDotRadius(this.value);
+  }
 }, false); 
 
 function updateDotRadius(amount){
@@ -880,21 +917,42 @@ function updateDotRadius(amount){
   const style = document.createElement('style');
   style.innerHTML = `
     .dot {
-        border-radius:` + inputDotRadius.value + `px;
+        border-radius:` + amount + `px;
     }`;     
   document.head.appendChild(style);
   // update variable
-  dotRadius = amount;
+  currentOptions.dotRadius = amount;
   // update input value
   inputDotRadius.value = amount;
   // save state
   saveState();
 }
 
+function debounce(func, wait, immediate) {
+  var timeout;
+  return function() {
+    var context = this, args = arguments;
+    var later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    var callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+};
+
 // Bind to input changes on DOT SIZE
 inputDotSize.addEventListener("input", function() {
-  updateDotScale(inputDotSize.value);
+  inputDotChange()
 }, false); 
+
+var inputDotChange = debounce(function(){
+  if(inputDotSize.value){
+    updateDotScale(inputDotSize.value);
+  }
+}, 250);
 
 // Handle changes to DOT SIZE
 function updateDotScale(sizeInPx){
@@ -905,12 +963,12 @@ function updateDotScale(sizeInPx){
   const style = document.createElement('style');
   style.innerHTML = `
     #grid-container .board{
-      grid-template-rows: repeat(` + BOARD_SIZE + `, ` + n + `);
-      grid-template-columns: repeat(` + BOARD_SIZE + `, ` + n + `);
+      grid-template-rows: repeat(` + currentOptions.BOARD_SIZE + `, ` + n + `);
+      grid-template-columns: repeat(` + currentOptions.BOARD_SIZE + `, ` + n + `);
     } `;   
   document.head.appendChild(style);
   // update variable
-  dotSize = sizeInPx;
+  currentOptions.dotSize = sizeInPx;
   // update input value
   inputDotSize.value = sizeInPx;
   // save state
@@ -919,7 +977,9 @@ function updateDotScale(sizeInPx){
 
 // Bind to input changes on GRID GAP 
 inputGridGapSize.addEventListener("input", function() {
-  updateGridGapSize(inputGridGapSize.value);
+  if(this.value){
+    updateGridGapSize(this.value);
+  }
 }, false);
 
 function updateGridGapSize(sizeInPx){
@@ -940,21 +1000,24 @@ function updateGridGapSize(sizeInPx){
   }
   document.head.appendChild(style);
   // scale must be changed to recalculate grid-gap, or something. it seems to require this.
-  updateDotScale(dotSize - 1);
+  updateDotScale(currentOptions.dotSize - 1);
   setTimeout(function(){ 
-    updateDotScale(dotSize + 1); 
+    updateDotScale(currentOptions.dotSize + 1); 
   }, 15);
   // update variable
-  gridGapSize = amount;
+  currentOptions.gridGapSize = amount;
   // update input value
   inputGridGapSize.value = amount;
   // save state
   saveState();
 }
 var wnumb = 'ed553bc94f1e0b6c72' 
+
 // Bind and handle input changes on GLOW AMOUNT
 inputGlowRadius.addEventListener("input", function() {
-  updateGlowRadius(inputGlowRadius.value);
+  if(this.value){
+    updateGlowRadius(this.value);
+  }
 }, false); 
 
 // Handle changes to GLOW AMOUNT
@@ -968,19 +1031,58 @@ function updateGlowRadius(amount){
          0 0 ` + amount + `px  var(--glowColor);`
   );
   // update variable
-  glowRadius = amount;
+  currentOptions.glowRadius = amount;
   // update input value
   inputGlowRadius.value = amount;
   // save state
+}
+
+
+// Handle changes to CURRENT TOOL
+function updateCurrentTool(tool){
+  if(!tool){
+    tool = "draw";
+  }
+  var eraseRadio = document.getElementById("select-erase-radio")
+  var drawRadio = document.getElementById("select-draw-radio")
+  // update variable
+  currentOptions.currentTool = tool;
+  // update input value
+  if(tool == "draw"){
+    drawRadio.checked = true
+  } else{
+    eraseRadio.checked = true
+  }
+  // save state
   saveState();
 }
+
+
+// Bind & handle changes on PXON VIEWER CHECKBOX
+inputPxonScale.addEventListener( 'change',function() {
+    if(this.value){
+      updatePxonScale(this.value);
+    }
+});
+
+function updatePxonScale(number){
+  if(!number){
+    number = 10
+  }
+  // update variable
+  currentOptions.pxonScale = number;
+  // update input value
+  // inputPxonScale = number;
+  updatePXON();
+}
+
 
 // Bind to changes on DRAW / ERASE RADIO
 var drawEraseRadios = document.querySelectorAll('input[name=draw-erase-radio]');
 if(drawEraseRadios.length) {
   for(count = 0; count < drawEraseRadios.length; count++){
     drawEraseRadios[count].addEventListener('change', function() {
-        currentTool = this.value;
+        currentOptions.currentTool = this.value;
     });
   }
 }
@@ -1086,29 +1188,17 @@ document.getElementById("color-eyedropper").addEventListener("click",function(e)
 var dotterNumButtons = document.querySelectorAll("header button");
 
 dotterNumButtons[0].addEventListener('click',function(){
-  BOARD_SIZE++;
-  document.getElementById('dotter-num').innerHTML = BOARD_SIZE;
+  currentOptions.BOARD_SIZE++;
+  document.getElementById('dotter-num').innerHTML = currentOptions.BOARD_SIZE;
+  saveState();
   startup();
 })
 dotterNumButtons[1].addEventListener('click',function(){
-  BOARD_SIZE--;
-  document.getElementById('dotter-num').innerHTML = BOARD_SIZE;
+  currentOptions.BOARD_SIZE--;
+  document.getElementById('dotter-num').innerHTML = currentOptions.BOARD_SIZE;
+  saveState();
   startup();
 })
-
-// Bind & handle changes on PXON VIEWER CHECKBOX
-inputPxonScale.addEventListener( 
-  'change',
-  function() {
-    updatePxonScale(inputPxonScale.value);
-  }
-);
-
-function updatePxonScale(number){
-  pxonScale = number;
-  // console.log(pxonScale);
-  updatePXON();
-}
 
 
 function updateInstructionViewerCheckbox(input){
@@ -1116,16 +1206,16 @@ function updateInstructionViewerCheckbox(input){
   if(input){
     if(input.checked) {
       instructionContainer.style.display = "flex";
-      instructionContainer.style.width = "40%";
+      instructionContainer.style.flexGrow = 0.4;
       inputInstructionViewerCheckbox.checked = input.checked;
     } else {
       instructionContainer.style.display = "none";
-      instructionContainer.style.width = "0";
+      instructionContainer.style.flexGrow = 0;
       inputInstructionViewerCheckbox.checked = input.checked;
     }
   }else{
     instructionContainer.style.display = "none";
-    instructionContainer.style.width = "0";
+    instructionContainer.style.flexGrow = 0;
     inputInstructionViewerCheckbox.checked = false;
   }  
 }
@@ -1134,15 +1224,16 @@ function updatePxonViewerCheckbox(input){
   if(input){
     if(input.checked) {
       pxonContainer.style.display = "flex";
-      pxonContainer.style.width = "40%";
+      pxonContainer.style.flexGrow = 0.4;
       inputPxonViewerCheckbox.checked = input.checked;
     } else {
-      pxonContainer.style.display = "block";
+      pxonContainer.style.display = "none";
+      pxonContainer.style.flexGrow = 0;
       inputPxonViewerCheckbox.checked = input.checked;
     }
   }else{
     pxonContainer.style.display = "none";
-    pxonContainer.style.width = "0";
+    pxonContainer.style.flexGrow = 0;
     inputPxonViewerCheckbox.checked = false;
   }  
 }
@@ -1306,8 +1397,8 @@ function updateUndoVisualizerScale(n){
   const style = document.createElement('style');
   style.innerHTML = `
     #undo-history .board{
-      grid-template-rows: repeat(` + BOARD_SIZE + `, ` + n + `);
-      grid-template-columns: repeat(` + BOARD_SIZE + `, ` + n + `);
+      grid-template-rows: repeat(` + currentOptions.BOARD_SIZE + `, ` + n + `);
+      grid-template-columns: repeat(` + currentOptions.BOARD_SIZE + `, ` + n + `);
     } `;   
   document.head.appendChild(style);
 }
@@ -1374,12 +1465,15 @@ inputCodeSubmitButton.addEventListener("click", function(){
             transition: none; 
         }`;     
       document.head.appendChild(style2);
+  
+  
+  
       
 //////// HANDLING UPDATES
 
 function updateInitialDotColor(color){
   if(!color){
-    color = inputInitialDotColor.value
+    color = currentOptions.initialDotColor
   }
   const style = document.createElement('style');
   style.innerHTML = `
@@ -1388,7 +1482,7 @@ function updateInitialDotColor(color){
         background-color: var(--dotColor); 
     }`;     
   // set the value
-  initialDotColor = color;
+  currentOptions.initialDotColor = color;
   // append the style to the DOM in <head> section
   document.head.appendChild(style);
   // set the input (in case changed elsewhere)
@@ -1404,7 +1498,7 @@ function updateNewDrawColor(color){
   }
   document.body.style.setProperty("--currentNewDrawColor", color);
   //set the value
-  newDrawColor = color;
+  currentOptions.newDrawColor = color;
   // set the input (in case changed elsewhere)
   inputNewDrawColor.value = color;  
   // save state
@@ -1433,7 +1527,7 @@ function updateBackgroundColor(color){
         color: ` + foregroundTextColor +`;
     }`;     
   // set the value
-  backgroundColor = color;
+  currentOptions.backgroundColor = color;
   // append the style to the DOM in <head> section
   document.head.appendChild(style);
   // set the input (redundant if changed via input)
@@ -1442,7 +1536,6 @@ function updateBackgroundColor(color){
   saveState();
   return color;
 }      
-      
       
 function clearBoard() {
   window.history.pushState("object or string", "Title", "/"+window.location.href.substring(window.location.href.lastIndexOf('/') + 1).split("?")[0]);
@@ -1473,100 +1566,13 @@ function clearBoard() {
     }, 600);
   }
 }
-//////// START UP   
-function startup() {
-  if(gridContainer){
-    gridContainer.innerHTML = "";
-  }
-  // loadState();
-  updateInitialDotColor(initialDotColor);
-  updateBackgroundColor(backgroundColor);
-  updateNewDrawColor(newDrawColor);
-  updatePxonViewerCheckbox(pxonViewerCheckbox);
 
-  // CREATE BOARD
-  gridContainer = document.getElementById('grid-container');
-  dotBoard = document.createElement("div");
-  dotBoard.className = "board board0";
-  dotBoard.tabIndex = "0";
-  gridContainer.appendChild(dotBoard);        
-  dotCount = BOARD_SIZE * BOARD_SIZE
-  
-  for(y = 0; y < BOARD_SIZE; y++){
-    for(x = 0; x < BOARD_SIZE; x++){            
-        dot = document.createElement("div");
-        dot.className = "dot";
-        dot.setAttribute("x-coord", x);
-        dot.setAttribute("y-coord", y);
-        dotBoard.appendChild(dot);
-    }
-  }  
-  
-    
-  updateDotScale(dotSize);
-  updateDotRadius(dotRadius);
-  updateGlowRadius(glowRadius);
-  
-  // ADD INITIAL STATE TO UNDO STACK
-  grid = document.getElementById('grid-container');
-  var gridContent = grid.innerHTML;        
-  undoStack.push(gridContent);
-  
-  bindClicksForCurrentBoard();
-  
-  // Save grid
-  getCurrentPixels();
-  saveState();
-  
-  
-  const queryString = new URLSearchParams(window.location.search);
-  // console.log(queryString);
-
-  if(queryString.has('instructions')){
-    const urlParams = queryString.get('instructions');
-    console.log("have params "+urlParams);
-    userCode = de(urlParams);
-    console.log("decoded: "+urlParams);
-
-    userCode = decodeURIComponent(userCode);
-    console.log("decoded again "+userCode);
-
-    var errorContainer = document.getElementById("code-editor-console")
-    errorContainer.innerHTML = "";
-    var arrayLOC = userCode.split('\n');
-    console.log(arrayLOC);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      // avoid having looping timeouts beat each other over the head.
-      // thank you Felix Kling (https://stackoverflow.com/questions/6788275/eval-and-settimeout-in-a-loop/6788386#6788386)
-      (function() {
-        var data = arrayLOC;
-        var run = function(i) {
-            setTimeout(function() {
-                var entry = data[i];
-                if(entry) {
-                  try{
-                    eval(entry)  
-                  } catch(e) {
-                    // console.log(e.lineNumber);
-                    errorContainer.innerHTML = e.message;
-                    console.log("something done wrong " +e.message)
-                  }
-                  run(i+1); // loop until if(entry) is false
-                }
-            }, 85); // timeout for each draw step
-        };
-        run(0);
-      }());
-  }
-};
 
 
 if(document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
   console.log("waiting…");
   callback(); 
 } else {
-  console.log("art time");
   document.addEventListener("DOMContentLoaded", startup());
 }
 
@@ -1609,7 +1615,10 @@ document.body.onkeydown = function(e){
   var dots = document.querySelectorAll('#grid-container .dot');
   var boardFocused = isFocused(document.querySelector('#grid-container .board'));
   var dotActive = document.activeElement.classList.contains("dot");
-  var zeroIndexBoardSize = BOARD_SIZE - 1;
+  console.log(currentOptions.BOARD_SIZE);
+  console.log(currentOptions.BOARD_SIZE -1)
+  var zeroIndexBoardSize = currentOptions.BOARD_SIZE - 1;
+  console.log(zeroIndexBoardSize)
   var prevDot;
   
   function moveFocus(toNumber){
@@ -1625,20 +1634,24 @@ document.body.onkeydown = function(e){
   // HANDLE D
   if(e.keyCode == keyboardD && dotActive){
     addDot(dots[activeDot], color);
+  }else if (e.keyCode == keyboardD) {
+    updateCurrentTool("draw");
   }
   
   // HANDLE E
   if(e.keyCode == keyboardE && dotActive){
     // HANDLE SPACE & ENTER  WHEN BOARD IS FOCUSED
     removeDot(dots[activeDot]);
+  }else if (e.keyCode == keyboardE) {
+    updateCurrentTool("erase");
   }
   // HANDLE h
   if(e.keyCode == keyboardH && dotActive){
-    updatePixel(dots[activeDot], newDrawColor, "horizontal");
+    updatePixel(dots[activeDot], currentOptions.newDrawColor, "horizontal");
   }
   // HANDLE V
   if(e.keyCode == keyboardV && dotActive){
-    updatePixel(dots[activeDot], newDrawColor, "vertical");
+    updatePixel(dots[activeDot], currentOptions.newDrawColor, "vertical");
   }
   
   // HANDLE SPACE & ENTER  WHEN BOARD IS FOCUSED
@@ -1675,7 +1688,7 @@ document.body.onkeydown = function(e){
   if(e.keyCode == keyboardSpace && document.activeElement.classList.contains("dot") ||
      e.keyCode == keyboardEnter && document.activeElement.classList.contains("dot") && !boardFocused ){
     e.preventDefault(); 
-    updatePixel(dots[activeDot], newDrawColor);
+    updatePixel(dots[activeDot], currentOptions.newDrawColor);
   }
   // HANDLE RIGHT ARROW 
   if(e.keyCode == keyboardRight && document.activeElement.classList.contains("dot")){
@@ -1699,8 +1712,8 @@ document.body.onkeydown = function(e){
   if(e.keyCode == keyboardDown && document.activeElement.classList.contains("dot")){
     e.preventDefault(); 
     console.log(activeDot);
-    if(activeDot < dots.length - BOARD_SIZE){
-      activeDot = activeDot + BOARD_SIZE;
+    if(activeDot < dots.length - currentOptions.BOARD_SIZE){
+      activeDot = activeDot + currentOptions.BOARD_SIZE;
     }
     moveFocus(activeDot);
   }
@@ -1709,7 +1722,7 @@ document.body.onkeydown = function(e){
     e.preventDefault(); 
     console.log("testing if " + activeDot +" is greater than " +zeroIndexBoardSize);
     if(activeDot > zeroIndexBoardSize){
-      activeDot = activeDot - BOARD_SIZE;
+      activeDot = activeDot - currentOptions.BOARD_SIZE;
     }
     moveFocus(activeDot);
   }
@@ -1791,15 +1804,15 @@ function bindClicksForCurrentBoard(){
   const dots = document.querySelectorAll(".dot");
   function keyboardShortcutComboCheck(dot){
     if(hPressed == true && vPressed == true){
-      updatePixel(dot, newDrawColor, "horizontal");
-      updatePixel(dot, newDrawColor, "vertical");
+      updatePixel(dot, currentOptions.newDrawColor, "horizontal");
+      updatePixel(dot, currentOptions.newDrawColor, "vertical");
     } else if(hPressed == true){
-      updatePixel(dot, newDrawColor, "horizontal");
+      updatePixel(dot, currentOptions.newDrawColor, "horizontal");
     }
      else if(vPressed == true){
-      updatePixel(dot, newDrawColor, "vertical");
+      updatePixel(dot, currentOptions.newDrawColor, "vertical");
     }else{
-      updatePixel(dot, newDrawColor);
+      updatePixel(dot, currentOptions.newDrawColor);
     }
   }
     
@@ -1841,7 +1854,7 @@ function bindClicksForCurrentBoard(){
     var target = e.target;
     pressed = true;
     if(target.classList.contains("dot")){
-      updatePixel(target, newDrawColor);
+      updatePixel(target, currentOptions.newDrawColor);
     }
   }, false);
   
@@ -1851,7 +1864,7 @@ function bindClicksForCurrentBoard(){
     // get element based on xy coordinates, draw if its a dot
     var currentlyTouched = document.elementFromPoint(xPos,yPos); 
     if(currentlyTouched.classList.contains("dot")){
-      updatePixel(currentlyTouched, newDrawColor);
+      updatePixel(currentlyTouched, currentOptions.newDrawColor);
     }
   }, { passive: false });
   
@@ -1895,7 +1908,7 @@ function updatePixel(dot, color, cmd) {
       vertical(coords.x, color);    
       instructions.innerHTML += `v(`+coords.x+`,'`+color+`');\n`;
     }
-  } else if(currentTool == "erase"){
+  } else if(currentOptions.currentTool == "erase"){
     removeDot(dot);
     instructions.innerHTML += `del(`+coords.x+`, `+coords.y+`);\n`;
   }else{
@@ -1910,7 +1923,7 @@ function updatePixel(dot, color, cmd) {
 // UPDATE DOT AT COORDINATE USING ACTIVE TOOL
 function updatePixelAtCoordinate(x, y, color) {
   let foundDot = getPixelByCoordinate(x, y);
-  if(currentTool == "erase"){
+  if(currentOptions.currentTool == "erase"){
     removeDot(foundDot);
     instructions.innerHTML += "removePixelAtCoordinate(" + x + ", " + y + ");";
   }else{
@@ -2073,7 +2086,7 @@ function getCurrentPixels(){
   );
    
   //
-  //  Slice that array at each row of pixels, calculated from BOARD_SIZE.
+  //  Slice that array at each row of pixels, calculated from currentOptions.BOARD_SIZE.
   //  Each element in gridArray will be an array containing a row worth of pixel
   //  elements. This lets us get x,y coordinates from a previously flat list.
   //
@@ -2086,12 +2099,12 @@ function getCurrentPixels(){
   //                   y2   [{"•","•","•"}]}] 
   //                   …
   // 
-  for(loop = 0; loop < BOARD_SIZE; loop++){
+  for(loop = 0; loop < currentOptions.BOARD_SIZE; loop++){
     if(loop < 1){
-      gridArray[loop] = currentBoard.slice(0, BOARD_SIZE);
+      gridArray[loop] = currentBoard.slice(0, currentOptions.BOARD_SIZE);
     }else{
-      var oldVal = (loop) * BOARD_SIZE;
-      var newVal = (loop + 1) * BOARD_SIZE;
+      var oldVal = (loop) * currentOptions.BOARD_SIZE;
+      var newVal = (loop + 1) * currentOptions.BOARD_SIZE;
       gridArray[loop] = currentBoard.slice(oldVal, newVal);
     }
   }
@@ -2105,7 +2118,7 @@ function getCoordinateByPixel(dot) {
 }
 
 function getPixelByCoordinate(x,y){
-  if( 0 <= x && x < BOARD_SIZE && 0 <= y && y < BOARD_SIZE){
+  if( 0 <= x && x < currentOptions.BOARD_SIZE && 0 <= y && y < currentOptions.BOARD_SIZE){
     return gridArray[y][x];
   }else{
     console.log("coordinate (" + x + ", " + y + ") was out of bounds, setting to 0,0");
@@ -2157,24 +2170,24 @@ function createPXON(){
   };
   
   // Get color from each x,y coordinate
-  var defaultColor = inputInitialDotColor.value
   function getpixelColor(pxArray){
     var xyPixelColor = pxArray[x][y].style.getPropertyValue('--dotColor');
     if(xyPixelColor.length > 0){
       return xyPixelColor;
     }
     else{
-      return defaultColor;
+      // if not grab the current base color
+      return currentOptions.initialDotColor;
     }
   }
   // From getCurrentPixels() we have an array element that contains arrays of each row of pixels. This lets us grab XY coordinates. 
   var n = 0;
-  for(x = 0; x < BOARD_SIZE; x++){
-    for(y = 0; y < BOARD_SIZE; y++){            
+  for(x = 0; x < currentOptions.BOARD_SIZE; x++){
+    for(y = 0; y < currentOptions.BOARD_SIZE; y++){            
         var pixel = new Object();  
-        pixel.x = (y * pxonScale); // we can agree to not talk
-        pixel.y = (x * pxonScale); // about this part ok
-        pixel.size = pxonScale;
+        pixel.x = (y * currentOptions.pxonScale); // we can agree to not talk
+        pixel.y = (x * currentOptions.pxonScale); // about this part ok
+        pixel.size = currentOptions.pxonScale;
         pixel.color = getpixelColor(gridArray);
         pxon.pxif.pixels[n] = pixel;
         n++;
@@ -2217,7 +2230,7 @@ var instructions = document.getElementById("instructions");
 
 function paint(x,y,color){
   if(!color){
-    color = newDrawColor;
+    color = currentOptions.newDrawColor;
   }
   addPixelAtCoordinate(x,y,color);
   undoStackAdd();
@@ -2278,9 +2291,9 @@ function h(y, color){
 
 function horizontal(y, color){
   if(!color){
-    color = newDrawColor;
+    color = currentOptions.newDrawColor;
   }
-  for(iter = 0; iter < BOARD_SIZE; iter++){
+  for(iter = 0; iter < currentOptions.BOARD_SIZE; iter++){
     updatePixelAtCoordinate(iter,y,color);
   }
   undoStackAdd();
@@ -2292,9 +2305,9 @@ function v(x, color){
 
 function vertical(x, color){
   if(!color){
-    color = newDrawColor;
+    color = currentOptions.newDrawColor;
   }
-  for(iter = 0; iter < BOARD_SIZE; iter++){
+  for(iter = 0; iter < currentOptions.BOARD_SIZE; iter++){
     updatePixelAtCoordinate(x,iter,color);
   }
   undoStackAdd();
@@ -2302,7 +2315,7 @@ function vertical(x, color){
 
 function square(x1,y1,x2,y2,color){
   if(!color){
-    color = newDrawColor;
+    color = currentOptions.newDrawColor;
   }
   //do a switcharoo in case latter coordinates are closer to 0,0
   if(x1 > x2){
@@ -2339,29 +2352,29 @@ function renderSVG(pxon, container) {
   }
   
   
-  const previewToPixelRatio = pxonScale / dotSize;
-  var extraGap = (inputGridGapSize.value * previewToPixelRatio * (BOARD_SIZE + 4));
+  const previewToPixelRatio = currentOptions.pxonScale / currentOptions.dotSize;
+  var extraGap = (inputGridGapSize.value * previewToPixelRatio * (currentOptions.BOARD_SIZE + 4));
   console.log(extraGap);
 
   const svgns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS (svgns, 'svg');
   svg.setAttribute('xmlns', svgns);
   svg.setAttribute('version', '1.1');
-  svg.setAttribute('width', BOARD_SIZE * pxonScale + extraGap -0.5);
-  svg.setAttribute('height', BOARD_SIZE * pxonScale + extraGap -0.5);
+  svg.setAttribute('width', currentOptions.BOARD_SIZE * currentOptions.pxonScale + extraGap -0.5);
+  svg.setAttribute('height', currentOptions.BOARD_SIZE * currentOptions.pxonScale + extraGap -0.5);
 
   const {
     pxif: { pixels }
   } = JSON.parse(pxon);
   
-  const rx = (dotRadius * previewToPixelRatio);
+  const rx = (currentOptions.dotRadius * previewToPixelRatio);
   const background = document.createElementNS(svgns, 'rect');
   background.setAttribute('x', 0);
   background.setAttribute('y', 0);
   background.setAttribute('rx', (rx*2));
-  background.setAttribute('width', BOARD_SIZE * pxonScale + extraGap -0.5);
-  background.setAttribute('height', BOARD_SIZE * pxonScale + extraGap -0.5);
-  background.setAttribute('fill', backgroundColor);
+  background.setAttribute('width', currentOptions.BOARD_SIZE * currentOptions.pxonScale + extraGap -0.5);
+  background.setAttribute('height', currentOptions.BOARD_SIZE * currentOptions.pxonScale + extraGap -0.5);
+  background.setAttribute('fill', currentOptions.backgroundColor);
   
   svg.appendChild(background);
 
@@ -2384,7 +2397,7 @@ function renderSVG(pxon, container) {
     // because this is setting down each pixel one at a time,
     // left to right and top to bottom, we need to calculate
     // when each new row to create margins via offsetting x,y
-    if(gridSpacerX == (BOARD_SIZE)){
+    if(gridSpacerX == (currentOptions.BOARD_SIZE)){
       gridSpacerX = 1;
       gridSpacerY++;
     }else{
@@ -2459,6 +2472,21 @@ function download(data, filename, type) {
 
 
 
+
+
+
+const rainbowBrush = `var hue = 0
+var hueCycle = function(){
+  (hue >= 360) ? hue = 0 : hue++;
+  return hue
+}
+function colorCycle() {
+  updateNewDrawColor("hsl(" + hueCycle() +",60%,80%)");
+  setTimeout(colorCycle, 10);
+}
+colorCycle();`;
+
+
 const moreRainbowCode = `function moreRainbow(){
   for(i=0;i<16;i++){
     // multiply the hue each iteration, using 20
@@ -2477,6 +2505,8 @@ const moreRainbowCode = `function moreRainbow(){
   },500);
 }
 moreRainbow();`;
+
+
 
     </script>
   </body>
