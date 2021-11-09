@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="main.js" defer></script>
+  <style type="text/css">
+    *{
+      font-size: 16px;
+      font-weight: 400;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html{
+     
+    }
+    body{
+      position: relative;
+      margin: 0;
+      font-family: 'SF Mono', SFMono-Regular, ui-monospace,
+      'DejaVu Sans Mono', Menlo, Consolas, monospace;
+      text-align: center;
+      --text-color: #000000; /* or rgba(22, 37, 53, 0.9) */
+      --background-color: #fff;
+      --background-tint: rgba(255, 248, 237, 0.3);
+      --divider-color: rgba(202, 176, 136, 0.6);
+      --divider-background-color: #FFE2B7;
+      --divider-text-color: #754600;
+      --text-design-color: #dd7400;
+      --text-dev-color: #3300FF;
+      --text-design-color-light: #FCBA57;
+      --text-dev-color-light: #A790FF;
+      --grid-thumbnail-background: #F8F2EA;
+      --text-color-secondary: rgba(33, 33, 33, 0.6);
+    }
+    a{
+      text-decoration: none;
+      border-bottom: 1px solid var(--text-color);
+      color: var(--text-color);
+    }
+    .header h1{
+      font-size: 30px;
+      font-weight: 600;
+      margin-bottom: 60px;
+      margin-top: 0;
+      padding-top: 0;
+    }
+    .section{
+      padding: 60px 10% 70px;      
+    }
+    .section p{
+      margin-bottom: 40px;
+      line-height: 1.3;
+    }
+    .section p, .grid{
+      max-width: 750px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .section h4, .section h2{
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .section h4{
+      font-size: 24px;
+      font-weight: 300;
+      color: var(--text-color-secondary);
+    }
+    .section h2{
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    .section small{
+      font-size: 13px;
+      color: var(--text-color-secondary);
+    }
+    .section.tinted{
+      background: linear-gradient(336.15deg, rgba(255, 153, 0, 0.11) -35.53%, rgba(255, 255, 255, 0) 104.64%);
+      background: var(--background-tint);
+    }
+    .design{
+      color: #FF8A00;
+      color: var(--text-design-color);
+    }
+    .dev{
+      color: var(--text-dev-color);
+    }
+    .divider{
+      height: 0;
+      border-bottom: .5px solid var(--divider-color);
+    }
+    .divider .header{
+      font-size: 12px;
+      color: var(--divider-text-color);
+      background-color: var(--divider-background-color);
+      width: -moz-fit-content;
+      width: fit-content;
+      margin: auto;
+      padding: 4px 40px 3.5px;
+      border-radius: 6px;
+      position: relative;
+      top: -11px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 200px));
+      /* grid-template-rows: repeat(auto-fill, minmax(200px, 1fr)); */
+      gap: 0 30px;
+      justify-content: space-evenly;   
+      margin-top: 20px;
+    }
+    .grid-item{
+      padding-bottom: 20px;
+    }
+    .grid-item *{
+      transition: all .2s;
+      transform: scale(1);
+      
+    }
+    .grid-thumbnail:hover,
+    .grid-item p:hover ~ .grid-thumbnail{
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px  -5px rgba(0,0,0,.5), 0 2px 50px  0px rgba(50,50,20,.1);
+      /* transition: transform .4s; */
+    }
+    .grid-item a{
+      text-decoration: none;
+      border-bottom: none;
+    }
+    .grid-item p{
+      cursor: pointer;
+      display: block;
+      display: inline-block;
+      font-size: 13px;
+      padding: 20px 1px 0;
+      border-bottom: 1px solid rgba(255,255,255,0);
+      transition: border-bottom-color .2s;
+    }
+    .grid-thumbnail:hover ~ p,
+    .grid-item p:hover{
+      border-bottom: 1px solid var(--text-color);
+    }
+    .grid-item .grid-thumbnail{
+      cursor: pointer;
+      margin: 15px 0 0;
+      width: 100%;
+      box-shadow: 0 4px 8px  -5px rgba(0,0,0,.5), 0 2px 50px  0px rgba(50,50,20,.05);
+
+      position: relative;
+      width: 100%;
+      padding-top: 63%;
+      border-radius: 13px;
+      background: var(--grid-thumbnail-background) url("thumbnail-dls.svg") no-repeat center bottom;
+    }
+    .container{
+      background-color: var(--background-color);
+      color: var(--text-color);
+      transition: all .6s, color .3s;
+    }
+    input.theme-controls{
+      display: none;
+    }
+    label.theme-controls{
+      height:0;
+      cursor: pointer;
+      position: relative;
+      right: 30px;
+      top: 15px;
+      display: block;
+      text-align: right;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    label.theme-controls::after{
+      color: var(--text-color);
+    }
+    [id="theme"] ~ label::before {
+      content: "🌙 ";   
+      position: relative;
+      top: -1.25px;  
+    }
+    [id="theme"] ~ label::after {
+      content: "turn out the lights";   
+      /* text-decoration: underline; */
+      color: var(--text-color-secondary);
+      border-bottom: 1px solid var(--text-color-secondary);
+   
+    }
+    [id="theme"]:checked ~ label::before {
+      content: "☀️ ";
+      position: relative;
+      top: 0;
+    }
+    [id="theme"]:checked ~ label::after {
+      content: "turn on the lights";
+      --text-color-secondary: #D3DCF9; 
+      /* text-decoration: underline; */
+      color: var(--text-color-secondary);
+      border-bottom: 1px solid var(--text-color-secondary);
+
+    }
+    input[id="theme"]:checked ~ .container{
+      --text-color: #D3DCF9; 
+      --background-color: #021224;
+      --background-tint: #162535;
+      --divider-color: rgba(202, 176, 136, 0.6);
+      --divider-background-color: #FFE2B7;
+      --divider-text-color: #D3DCF9;
+      --text-design-color: #FFE2B7;
+      --text-dev-color: #BEAEFF;
+      --grid-thumbnail-background: rgba(255,255,255,.2);
+      --text-color-secondary: rgba(255,255,255,.6);
+    }
+    span.external-link{
+      color: var(--text-color-secondary);
+      border: 1px solid var(--text-color-secondary);
+      border-radius: 1px;
+      font-weight: 600;
+      font-size:14.5px;
+      padding: 0 3px 4.5px;
+      margin-right:-28px;
+      height: 17px;
+      display: inline-block;
+      transform: scale(.7) translate(-8px, -4px);
+      
+    }
+    .key{
+      margin-top: 20px;
+    }
+    .key span{
+      font-size: 13px;
+      opacity: 1;
+    }
+    .key .dev.bullet{
+      opacity: 0.6;
+    } 
+    .key .dev{
+      opacity: 0.7;
+    } 
+    .key span.bullet{
+      opacity: 0.8;
+      padding-right: 5px;
+      padding-left: 5px;
+    }
+    
+  </style>
+
+</head>
+
+<body>
+<input class="theme-controls" type="checkbox" id="theme" name="theme" alt="Switch color mode">
+<label class="theme-controls" for="theme"></label>
+<div class="container">
+  <div class="header section tinted">
+    <h1>Hi, I'm Ryan</h1>
+    <p>I'm an <span class="design">interaction designer</span> & <span class="dev">front-end developer</span> living in Seattle, Washington</p>
+    <p>I've worked on a multitude of projects, from building web sites for independent films and non-profits to designing complete mobile applications for large tech companies.</p>
+    <p>I'm currently <a href="mailto:ryan.whitney@me.com">not available for hire</a></p>
+    <small>(but you can still email me if you want to talk, or something)</small>
+  </div>
+  <div class="divider">
+    <div class="header">Selected Work</div>
+  </div>
+  <div class="section">
+    <h4>2014&ndash;2021</h4>
+    <h2>Tableau Software</h2>
+    <small>UX Designer, Senior UX Designer, Senior Design Engineer</small>
+    <div class="grid">
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Tableau Mobile</p>
+        <skill-bar value="10" max="10" data-type="design"></skill-bar>
+        <skill-bar value="2" max="10" data-type="dev"></skill-bar>
+      </div>
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Design Language System</p>
+        <skill-bar value="5" max="10" data-type="design"></skill-bar>
+        <skill-bar value="10" max="10" data-type="dev"></skill-bar>
+      </div>
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Various Projects</p>
+        <skill-bar value="5" max="10" data-type="design"></skill-bar>
+        <skill-bar value="5" max="10" data-type="dev"></skill-bar>
+      </div>
+    </div>
+    <div class="key">
+        <span class="bullet design">•</span><span class="design">Design</span>
+        <span class="bullet dev">•</span><span class="dev">Development</span>
+    </div>
+  </div>
+  <div class="divider">
+    <div class="header">Early Days</div>
+  </div>
+  <div class="section tinted">
+    <h4>2014&ndash;2021</h4>
+    <h2>"The Freelance Times"</h2>
+    <small>Product Design & Development</small>
+    <div class="grid">
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Aha! Stream</p>
+      </div>
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>HANK</p>
+      </div>
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Henry Ford</p>
+      </div>
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Seatgeek</p>
+      </div>
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Omaze</p>
+      </div>
+      <div class="grid-item">
+        <div class="grid-thumbnail"></div>
+        <p>Joint Tracker</p>
+        
+      </div>
+    </div>
+  </div>
+  <div class="divider">
+    <div class="header">Uhhh&hellip;</div>
+  </div>
+  <div class="section">
+    <h4>Ongoing</h4>
+    <h2>Side Projects & Experiments</h2>
+    <div class="grid">
+      <div class="grid-item">
+        <a target="_blank" href="http://badscreenprints.com">
+          <div class="grid-thumbnail"></div>
+          <p>Bad Screen Prints <span class="external-link">&#8599;</span></p>
+        </a>
+        <skill-bar value="10" max="10" data-type="design"></skill-bar>
+        <skill-bar value="10" max="10" data-type="dev"></skill-bar>
+      </div>
+      <div class="grid-item">
+        <a target="_blank" href="https://ryanwhitney.github.io/dotter/">
+          <div class="grid-thumbnail"></div>
+          <p>Dotter <span class="external-link">&#8599;</span></p>
+        </a>
+        <skill-bar value="10" max="10" data-type="design"></skill-bar>
+        <skill-bar value="10" max="10" data-type="dev"></skill-bar>
+      </div>
+    </div>
+    <div class="key">
+      <span class="bullet design">•</span><span class="design">Design</span>
+      <span class="bullet dev">•</span><span class="dev">Development</span>
+  </div>
+  </div>
+  <div class="divider">
+    <div class="header">Yadda, yadda, yadda</div>
+  </div>
+  <div class="section tinted">
+    <!-- <h4>Ongoing</h4> -->
+    <h2>More about me</h2>
+    <!-- <small>Product Design & Development</small> -->
+    <p>A list</p>
+  </div>
+</div>
+</body>
+</html>
