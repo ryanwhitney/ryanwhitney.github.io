@@ -4,6 +4,72 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="main.js" defer></script>
+  <script>
+  (function(global) {
+    /*
+      Simple functions to scale content to fit it's parent
+      
+      Author: Liudmil Mitev
+      License: WTFPL
+      Demo: https://jsfiddle.net/oxzxyxqn/7/
+      
+    */
+    function scaleAmountNeededToFit(el, margin = 0) {
+      
+      console.log(window.innerWidth);
+      const parentSize = {
+        width: window.innerWidth - margin * 2,
+        height: window.innerHeight - margin * 2
+      };
+      console.log(parentSize.height)
+  
+      return Math.min(parentSize.width / el.clientWidth,
+        parentSize.height / el.clientHeight);
+    }
+  
+    function fitToParent(element, margin) {
+      const scale = scaleAmountNeededToFit(element, margin);
+      element.style.transformOrigin = "0 0";
+      element.style.transform = `translate(${margin}px, ${margin}px) scale(${scale})`;
+    }
+  
+    global.fitToParent = fitToParent;
+  })(this);
+  
+//   
+//   (function(window) {
+//     function main() {
+//       const margin = 10;
+//       requestAnimationFrame(function fitToParentOnResize() {
+//         fitToParent(document.getElementById('element_to_scale'), margin);
+//       });
+//     }
+// 
+//     window.addEventListener("DOMContentLoaded", main);
+//     window.addEventListener("resize", main);
+//   })(this);
+//   
+//   
+//   
+//   
+  
+  window.onload = function() {
+    var thumbnails = document.getElementsByClassName("grid-thumbnail");
+    for(var i = 0; i < thumbnails.length; i++) {
+      var thumbnail = thumbnails[i];
+      thumbnail.onclick = function() 
+      {
+        console.log("1");
+        const margin = 10;
+          // requestAnimationFrame(function fitToParentOnResize() {
+            console.log("2");
+            fitToParent(thumbnail, margin);
+          // });
+
+      }
+    }
+  }
+  </script>
   <style type="text/css">
     *{
       font-size: 16px;
@@ -43,7 +109,7 @@
       font-size: 30px;
       font-weight: 600;
       margin-bottom: 60px;
-      margin-top: 0;
+      margin-top: 50px;
       padding-top: 0;
     }
     .section{
@@ -104,7 +170,6 @@
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 200px));
-      /* grid-template-rows: repeat(auto-fill, minmax(200px, 1fr)); */
       gap: 0 30px;
       justify-content: space-evenly;   
       margin-top: 20px;
@@ -113,7 +178,7 @@
       padding-bottom: 20px;
     }
     .grid-item *{
-      transition: all .2s;
+      transition: transform .2s;
       transform: scale(1);
       
     }
@@ -121,7 +186,18 @@
     .grid-item p:hover ~ .grid-thumbnail{
       transform: scale(1.02);
       box-shadow: 0 4px 12px  -5px rgba(0,0,0,.5), 0 2px 50px  0px rgba(50,50,20,.1);
-      /* transition: transform .4s; */
+    }
+    .grid-item .grid-thumbnail.fullscreen{
+      position: fixed;
+      z-index: 1000;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100%;
+      /* background: blue !important; */
     }
     .grid-item a{
       text-decoration: none;
@@ -142,13 +218,11 @@
       border-bottom: 1px solid var(--text-color);
     }
     .grid-item .grid-thumbnail{
+      transition: all .5s;
       cursor: pointer;
       margin: 15px 0 0;
-      width: 100%;
       box-shadow: 0 4px 8px  -5px rgba(0,0,0,.5), 0 2px 50px  0px rgba(50,50,20,.05);
-
-      position: relative;
-      width: 100%;
+      width: 200px;
       padding-top: 63%;
       border-radius: 13px;
       background: var(--grid-thumbnail-background) url("thumbnail-dls.svg") no-repeat center bottom;
@@ -156,7 +230,12 @@
     .container{
       background-color: var(--background-color);
       color: var(--text-color);
-      transition: all .6s, color .3s;
+    }
+    .container, .container *, p{
+      transition: background-color .8s, color .1s;
+    }
+    span.design, span.dev{
+      transition: color .4s ease-out;
     }
     input.theme-controls{
       display: none;
@@ -182,9 +261,7 @@
     }
     [id="theme"] ~ label::after {
       content: "turn out the lights";   
-      /* text-decoration: underline; */
       color: var(--text-color-secondary);
-      /* border-bottom: 1px solid var(--text-color-secondary); */
    
     }
     [id="theme"]:checked ~ label::before {
@@ -195,18 +272,15 @@
     [id="theme"]:checked ~ label::after {
       content: "turn on the lights";
       --text-color-secondary: #D3DCF9; 
-      /* text-decoration: underline; */
       color: var(--text-color-secondary);
-      /* border-bottom: 1px solid var(--text-color-secondary); */
-
     }
     input[id="theme"]:checked ~ .container{
       --text-color: #D3DCF9; 
       --background-color: #021224;
       --background-tint: #162535;
-      --divider-color: rgba(202, 176, 136, 0.6);
-      --divider-background-color: #FFE2B7;
-      --divider-text-color: #D3DCF9;
+      --divider-color: rgba(190, 174, 255, 0.4);
+      --divider-background-color: #D3DCF9;
+      --divider-text-color: rgba(67, 54, 113, 0.8);
       --text-design-color: #FFE2B7;
       --text-dev-color: #BEAEFF;
       --grid-thumbnail-background: rgba(255,255,255,.2);
@@ -268,7 +342,7 @@
     <small>UX Designer, Senior UX Designer, Senior Design Engineer</small>
     <div class="grid">
       <div class="grid-item">
-        <div class="grid-thumbnail"></div>
+        <div id="element_to_scale" class="grid-thumbnail"></div>
         <p>Tableau Mobile</p>
         <skill-bar value="10" max="10" data-type="design"></skill-bar>
         <skill-bar value="2" max="10" data-type="dev"></skill-bar>
